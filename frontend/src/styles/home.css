@@ -1,0 +1,105 @@
+.employee-home {
+  width: 90vw;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+.welcome-message {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.leave-balance, .leave-history {
+  margin-bottom: 30px;
+}
+
+.leave-balance p, .leave-history p {
+  font-size: 16px;
+  color: #555;
+}
+
+.scrollable-table {
+  max-height: 250px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.scrollable-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.scrollable-table th, .scrollable-table td {
+  padding: 8px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+.request-leave-button {
+  padding: 10px;
+  width: 200px;
+  font-size: 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  margin: 10px;
+  cursor: pointer;
+}
+
+.request-leave-button:hover {
+  background-color: #218838;
+}
+
+.leave-balance-table {
+  margin-top: 10px;
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 600px;
+}
+
+.leave-balance-table th, .leave-balance-table td {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+.leave-balance-table th {
+  background-color: #f5f5f5;
+}
+
+.charts-container {
+  display: flex;
+  gap: 20px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.chart-box {
+  flex: 1 1 auto;
+  padding: 8px;
+  margin: 10px 0;
+}
+
+.approve-btn{
+  padding: 10px;
+  width: 100px;
+  font-size: 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  margin: 10px;
+  cursor: pointer;
+}
+
+.reject-btn{
+  background-color: red;
+}

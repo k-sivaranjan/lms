@@ -1,0 +1,76 @@
+.leave-request-form {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.leave-request-form h3 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.leave-request-label {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.leave-request-input,
+.leave-request-textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0 20px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #fff;
+}
+
+.leave-request-textarea {
+  height: 120px;
+  resize: vertical;
+}
+
+.leave-request-checkbox-label {
+  margin-top: 10px;
+}
+
+.leave-request-checkbox {
+  margin-right: 10px;
+}
+
+.leave-request-submit-btn {
+  display: block;
+  margin: 20px auto 0 auto;
+  padding: 10px 30px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: auto;
+  height: auto;
+  min-width: 150px;
+}
+
+.leave-request-submit-btn:hover {
+  background-color: #45a049;
+}
+
+.leave-request-input:focus,
+.leave-request-textarea:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.leave-request-label + .leave-request-input,
+.leave-request-label + .leave-request-textarea {
+  margin-top: 10px;
+}

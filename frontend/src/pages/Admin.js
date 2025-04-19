@@ -1,0 +1,163 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import axios from 'axios';
+import '../styles/admin.css';
+
+function Admin({ user }) {
+  const navigate = useNavigate();
+  const [adminRequests, setAdminRequests] = useState([]);
+  const [usersOnLeaveToday, setUsersOnLeaveToday] = useState([]);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [leaveUsers, setLeaveUsers] = useState(0);
+  const [allUsers, setAllUsers] = useState([]);
+
+  useEffect(() => {
+    if (user) {
+      fetchAdminRequests();
+      fetchUsersOnLeaveToday();
+      fetchAllUsers();
+    }
+  }, [user]);
+
+  const onAddUser = () => {
+    navigate("/add-user");
+  };
+
+  const fetchAdminRequests = async () => {
+    const res = await axios.get(`http://localhost:5000/api/leave/requests/${user.id}`);
+    setAdminRequests(res.data.incomingRequests);
+  };
+
+  const fetchUsersOnLeaveToday = async () => {
+    const res = await axios.get('http://localhost:5000/api/leave/on-leave-today');
+    setUsersOnLeaveToday(res.data.users);
+    setLeaveUsers(res.data.count);
+  };
+
+  const fetchAllUsers = async () => {
+    const res = await axios.get('http://localhost:5000/api/auth/users');
+    setAllUsers(res.data.users);
+    setTotalUsers(res.data.count);
+  };
+
+  const handleApproveReject = async (requestId, action) => {
+    try {
+      await axios.put(`http://localhost:5000/api/leave/${action}/${requestId}`);
+      setAdminRequests(prevRequests =>
+        prevRequests.map(req => req.id === requestId ? { ...req, status: action } : req)
+      );
+      alert(`Request ${action}ed successfully`);
+    } catch (err) {
+      alert(`Failed to ${action} request`);
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateStr).toLocaleDateString(undefined, options);
+  };
+
+  return (
+    <div className="admin-dashboard">
+      <div className="admin-header">
+        <h2>Welcome, Admin</h2>
+        <button className="add-user-btn" onClick={onAddUser}>Add User</button>
+      </div>
+
+      <section className="leave-summary-row">
+        <div className="users-on-leave">
+          <h3>Users on Leave Today</h3>
+          {usersOnLeaveToday.length === 0 ? (
+            <p>No one is on leave today</p>
+          ) : (
+            <ul>
+              {usersOnLeaveToday.map(user => (
+                <li key={user.id}>{user.name}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="leave-summary-chart">
+          <h3>Leave Summary</h3>
+          {totalUsers > 0 ? (
+            <PieChart width={300} height={250}>
+              <Pie
+                data={[
+                  { name: 'On Leave', value: leaveUsers },
+                  { name: 'Available', value: totalUsers - leaveUsers }
+                ]}
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                dataKey="value"
+              >
+                <Cell fill="#ff6384" />
+                <Cell fill="#36a2eb" />
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          ) : (
+            <p>Loading chart...</p>
+          )}
+        </div>
+      </section>
+
+      <section className="admin-requests">
+        <h3>Leave Requests Needing Your Action</h3>
+        {adminRequests.length === 0 ? (
+          <p>No pending requests</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Leave Type</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {adminRequests.map(req => (
+                <tr key={req.id}>
+                  <td>{req.employee_name}</td>
+                  <td>{req.leave_type}</td>
+                  <td>{formatDate(req.start_date)}</td>
+                  <td>{formatDate(req.end_date)}</td>
+                  <td>{req.status}</td>
+                  <td>
+                    {req.status === 'pending' || req.status.includes('pending_level') ? (
+                      <>
+                        <button onClick={() => handleApproveReject(req.id, 'approve')}>Approve</button>
+                        <button onClick={() => handleApproveReject(req.id, 'reject')}>Reject</button>
+                      </>
+                    ) : (
+                      'No actions'
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      <section className="all-users">
+        <h3>All Users</h3>
+        <ul>
+          {allUsers.map(user => (
+            <li key={user.id}>
+              {user.name} ({user.role})
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+}
+
+export default Admin;

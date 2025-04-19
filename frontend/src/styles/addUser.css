@@ -1,0 +1,70 @@
+.add-user-form {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 24px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add-user-form h3 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.add-user-form form {
+  display: flex;
+  flex-direction: column;
+}
+
+.add-user-form input,
+.add-user-form select {
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border 0.2s ease;
+}
+
+.add-user-form input:focus,
+.add-user-form select:focus {
+  border-color: #007bff;
+}
+
+.add-user-form button {
+  padding: 10px;
+  font-size: 16px;
+  background-color: #007bff;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.add-user-form button:hover {
+  background-color: #0056b3;
+}
+
+.add-user-form p {
+  text-align: center;
+  margin-top: 10px;
+  font-weight: bold;
+  color: green;
+}
+
+.add-user-form .error-message {
+  color: red;
+  font-weight: bold;
+  text-align: center;
+}
+
+.add-user-form .success-message {
+  color: green;
+  font-weight: bold;
+  text-align: center;
+}
