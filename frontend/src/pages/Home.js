@@ -13,7 +13,7 @@ import '../styles/home.css';
 const COLORS = ['#0088FE', '#FF8042'];
 
 function Home() {
-  const { user } = useUser();
+  const { user, logout } = useUser();
   const navigate = useNavigate();
   const [leaveHistory, setLeaveHistory] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
@@ -26,6 +26,11 @@ function Home() {
   useEffect(() => {
     if (!user) navigate('/login');
   }, [user, navigate]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -97,7 +102,7 @@ function Home() {
   const formatDate = (date) => new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
   if (!user) return null;
-  if (user.role === "admin") return <Admin user={user} handleApproveReject={handleApproveReject} />;
+  if (user.role === "admin") return <Admin user={user} logout={logout} />;
 
   const pieData = [
     { name: 'Used', value: leaveTotal - leaveBalance },
@@ -113,7 +118,11 @@ function Home() {
 
   return (
     <div className="employee-home">
-      <h2 className="welcome-message">Welcome, {user.name}</h2>
+      <div className="home-header">
+        <h2 className="welcome-message">Welcome, {user.name}</h2>
+        <button onClick={handleLogout} className="logout-button">Logout</button>
+      </div>
+
       <div className="leave-balance">
         {loading.balance ? <p>Loading leave balance...</p> :
           error.balance ? <p>{error.balance}</p> :
@@ -151,6 +160,7 @@ function Home() {
         }
         <button onClick={handleRequestLeave} className="request-leave-button">Request Leave</button>
       </div>
+
       {user.role === 'manager' && incomingRequests.length > 0 && (
         <div className="incoming-requests">
           <h3>Leave Requests for Approval</h3>
@@ -189,6 +199,7 @@ function Home() {
           </div>
         </div>
       )}
+
       <div className="leave-history">
         {loading.history ? <p>Loading leave history...</p> :
           error.history ? <p>{error.history}</p> :

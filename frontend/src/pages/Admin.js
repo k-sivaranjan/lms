@@ -4,7 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import axios from 'axios';
 import '../styles/admin.css';
 
-function Admin({ user }) {
+function Admin({ user,logout }) {
   const navigate = useNavigate();
   const [adminRequests, setAdminRequests] = useState([]);
   const [usersOnLeaveToday, setUsersOnLeaveToday] = useState([]);
@@ -19,7 +19,10 @@ function Admin({ user }) {
       fetchAllUsers();
     }
   }, [user]);
-
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
   const onAddUser = () => {
     navigate("/add-user");
   };
@@ -62,9 +65,10 @@ function Admin({ user }) {
     <div className="admin-dashboard">
       <div className="admin-header">
         <h2>Welcome, Admin</h2>
-        <button className="add-user-btn" onClick={onAddUser}>Add User</button>
+        <button onClick={handleLogout} className="logout-button">Logout</button>
       </div>
-
+      
+      <button className="add-user-btn" onClick={onAddUser}>Add User</button>
       <section className="leave-summary-row">
         <div className="users-on-leave">
           <h3>Users on Leave Today</h3>
@@ -132,8 +136,8 @@ function Admin({ user }) {
                   <td>
                     {req.status === 'pending' || req.status.includes('pending_level') ? (
                       <>
-                        <button onClick={() => handleApproveReject(req.id, 'approve')}>Approve</button>
-                        <button onClick={() => handleApproveReject(req.id, 'reject')}>Reject</button>
+                        <button className='approve-btn' onClick={() => handleApproveReject(req.id, 'approve')}>Approve</button>
+                        <button className='approve-btn reject-btn' onClick={() => handleApproveReject(req.id, 'reject')}>Reject</button>
                       </>
                     ) : (
                       'No actions'

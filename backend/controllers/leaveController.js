@@ -1,13 +1,13 @@
-const { 
-  getUsersOnLeaveToday, 
-  getLeaveBalance, 
-  getLeaveTypes, 
-  requestLeave, 
-  getLeaveHistory, 
-  cancelLeave, 
-  getIncomingRequests, 
-  approveLeave, 
-  rejectLeave 
+const {
+  getUsersOnLeaveToday,
+  getLeaveBalance,
+  getLeaveTypes,
+  requestLeave,
+  getLeaveHistory,
+  cancelLeave,
+  getIncomingRequests,
+  approveLeave,
+  rejectLeave
 } = require('../models/leaveModel');
 
 const fetchUsersOnLeaveToday = async (req, res) => {
@@ -66,7 +66,7 @@ const requestLeaveHandler = async (req, res) => {
   try {
     const { userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason } = req.body;
     const result = await requestLeave(userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason);
-    
+
     res.status(201).json({ message: 'Leave requested successfully', result });
   } catch (err) {
     res.status(500).json({ error: 'Internal server error' });
@@ -123,14 +123,14 @@ const rejectLeaveHandler = async (req, res) => {
   }
 };
 
-module.exports = { 
-  fetchUsersOnLeaveToday, 
-  approveLeaveHandler, 
-  rejectLeaveHandler, 
-  fetchLeaveBalance, 
-  fetchLeaveTypes, 
-  requestLeaveHandler, 
-  getLeaveHistoryHandler, 
-  cancelLeaveHandler, 
-  getIncomingRequestsHandler 
+module.exports = {
+  fetchUsersOnLeaveToday,
+  approveLeaveHandler,
+  rejectLeaveHandler,
+  fetchLeaveBalance,
+  fetchLeaveTypes,
+  requestLeaveHandler,
+  getLeaveHistoryHandler,
+  cancelLeaveHandler,
+  getIncomingRequestsHandler
 };
