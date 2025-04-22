@@ -10,7 +10,7 @@ const getUsersOnLeaveToday = async () => {
     FROM leave_requests lr
     JOIN users u ON lr.user_id = u.id
     JOIN leave_types lt ON lr.leave_type_id = lt.id
-    WHERE lr.status = 'approved'
+    WHERE lr.status = 'Approved'
       AND CURDATE() BETWEEN lr.start_date AND lr.end_date
     GROUP BY u.id, u.name, u.email
   `;
@@ -33,14 +33,21 @@ const getLeaveBalance = async (userId, year) => {
   return rows;
 };
 
-
 const getLeaveTypes = async () => {
-  const query = `SELECT * FROM leave_types`
+  const query = `SELECT * FROM leave_types`;
   const [leaveTypes] = await pool.execute(query);
   return leaveTypes;
 };
 
-const requestLeave = async (userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason) => {
+const requestLeave = async (
+  userId,
+  leaveTypeId,
+  startDate,
+  endDate,
+  isHalfDay,
+  halfDayType,
+  reason
+) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
   const leaveDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
@@ -49,13 +56,19 @@ const requestLeave = async (userId, leaveTypeId, startDate, endDate, isHalfDay, 
     `SELECT multi_approver FROM leave_types WHERE id = ?`,
     [leaveTypeId]
   );
-  const multiApprover = leaveTypeRows[0]?.multi_approver;
+  const multiApprover = leaveTypeRows[0]?.multi_approver || 1;
 
   const [userRows] = await pool.execute(
-    `SELECT manager_id FROM users WHERE id = ?`,
+    `SELECT role, manager_id FROM users WHERE id = ?`,
     [userId]
   );
-  const { manager_id } = userRows[0];
+  const { role, manager_id } = userRows[0];
+
+  let maxApproverByRole = 1;
+  if (role === 'employee') maxApproverByRole = 3;
+  else if (role === 'manager') maxApproverByRole = 2;
+
+  const finalApprovalLevel = Math.min(multiApprover, maxApproverByRole);
 
   let level2ApproverId = null;
   if (manager_id) {
@@ -66,15 +79,14 @@ const requestLeave = async (userId, leaveTypeId, startDate, endDate, isHalfDay, 
     level2ApproverId = managerRows[0]?.manager_id;
   }
 
-  const initialStatus =
-    leaveDays > 5 || multiApprover === 1 ? 'pending_level_1' : 'pending';
+  let initialStatus = 'Pending';
+  if (finalApprovalLevel > 1) initialStatus = 'Pending (L1)';
 
   const query = `
     INSERT INTO leave_requests 
     (user_id, leave_type_id, start_date, end_date, is_half_day, half_day_type, reason, status, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
   `;
-
   const [result] = await pool.execute(query, [
     userId,
     leaveTypeId,
@@ -88,7 +100,6 @@ const requestLeave = async (userId, leaveTypeId, startDate, endDate, isHalfDay, 
 
   return result;
 };
-
 
 const getLeaveHistory = async (userId) => {
   const query = `
@@ -107,7 +118,6 @@ const getLeaveHistory = async (userId) => {
     WHERE lr.user_id = ?
     ORDER BY lr.created_at DESC
   `;
-
   const [rows] = await pool.execute(query, [userId]);
   return rows;
 };
@@ -119,16 +129,34 @@ const cancelLeave = async (leaveRequestId) => {
   }
 
   const request = leaveRequest[0];
-  const { status, level_2_approver_id } = request;
+  const { status, user_id, leave_type_id, start_date, end_date, is_half_day } = request;
 
-  if (status === 'pending_level_1' || status === 'pending_level_2') {
-    const cancelQuery = 'UPDATE leave_requests SET status = "cancelled" WHERE id = ?';
-    const [result] = await pool.execute(cancelQuery, [leaveRequestId]);
+  const start = new Date(start_date);
+  const end = new Date(end_date);
+  let totalDays = (end - start) / (1000 * 60 * 60 * 24) + 1;
 
-    return result;
-  } else {
-    throw new Error('Leave request cannot be cancelled because it is not pending');
+  if (is_half_day) {
+    totalDays = 0.5;
   }
+  const cancelQuery = 'UPDATE leave_requests SET status = "cancelled" WHERE id = ?';
+  await pool.execute(cancelQuery, [leaveRequestId]);
+
+  if (status === 'Approved') {
+    const updateBalanceQuery = `
+      UPDATE leave_balances
+      SET balance = balance + ?, used = used - ?
+      WHERE user_id = ? AND leave_type_id = ? AND year = YEAR(?)
+    `;
+    await pool.execute(updateBalanceQuery, [
+      totalDays,
+      totalDays,
+      user_id,
+      leave_type_id,
+      start_date
+    ]);
+  }
+
+  return { success: true, message: 'Leave request cancelled successfully' };
 };
 
 const getIncomingRequests = async (userId) => {
@@ -146,13 +174,33 @@ const getIncomingRequests = async (userId) => {
       FROM leave_requests lr
       JOIN users u ON lr.user_id = u.id
       JOIN leave_types lt ON lr.leave_type_id = lt.id
-      LEFT JOIN users mgr ON u.manager_id = mgr.id
+      LEFT JOIN users mgr ON u.manager_id = mgr.id       
+      LEFT JOIN users hr ON mgr.manager_id = hr.id        
       WHERE 
-        (lr.status = 'pending' AND u.role = 'manager') OR
-        (lr.status = 'pending_level_2' AND mgr.manager_id = ?)
-    `, [userId]);
+        (lr.status = 'Pending' AND u.role = 'hr') OR
+        (lr.status = 'Pending (L2)' AND hr.manager_id = ?) OR  
+        (lr.status = 'Pending (L3)' AND hr.manager_id = ?)
+    `, [userId, userId]);
 
     return adminRequests;
+  }
+
+  if (role === 'hr') {
+    const [hrRequests] = await pool.execute(`
+      SELECT 
+        lr.*, 
+        u.name AS employee_name,
+        lt.name AS leave_type
+      FROM leave_requests lr
+      JOIN users u ON lr.user_id = u.id
+      JOIN leave_types lt ON lr.leave_type_id = lt.id
+      LEFT JOIN users mgr ON u.manager_id = mgr.id
+      WHERE 
+        (lr.status = 'Pending' AND u.manager_id = ?) OR
+        (lr.status = 'Pending (L1)' AND u.manager_id = ?) OR
+        (lr.status = 'Pending (L2)' AND mgr.manager_id = ?)
+    `, [userId, userId, userId]);
+    return hrRequests;
   }
 
   if (role === 'manager') {
@@ -164,8 +212,9 @@ const getIncomingRequests = async (userId) => {
       FROM leave_requests lr
       JOIN users u ON lr.user_id = u.id
       JOIN leave_types lt ON lr.leave_type_id = lt.id
-      WHERE lr.status = 'pending_level_1' AND u.manager_id = ?
-    `, [userId]);
+      WHERE (lr.status = 'Pending' AND u.manager_id = ?) OR
+      (lr.status = 'Pending (L1)' AND u.manager_id = ?)
+    `, [userId, userId]);
 
     return managerRequests;
   }
@@ -178,48 +227,47 @@ const approveLeave = async (requestId) => {
   const request = requestRows[0];
   if (!request) throw new Error('Leave request not found');
 
-  const { user_id, leave_type_id, start_date, end_date, status } = request;
+  const { user_id, leave_type_id, start_date, end_date, is_half_day, status } = request;
 
-  const start = new Date(start_date);
-  const end = new Date(end_date);
-  const leaveDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  let leaveDays;
+  if (is_half_day) {
+    leaveDays = 0.5;
+  } else {
+    const start = new Date(start_date);
+    const end = new Date(end_date);
+    leaveDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  }
 
   const [leaveTypeRows] = await pool.execute(`SELECT multi_approver FROM leave_types WHERE id = ?`, [leave_type_id]);
   const multiApprover = leaveTypeRows[0]?.multi_approver;
 
-  if (status === 'pending') {
-    await pool.execute(`UPDATE leave_requests SET status = 'approved' WHERE id = ?`, [requestId]);
-  } else if (status === 'pending_level_1') {
-    if (leaveDays > 5 || multiApprover === 1) {
-      await pool.execute(`UPDATE leave_requests SET status = 'pending_level_2' WHERE id = ?`, [requestId]);
-      return { nextStep: 'Moved to level 2 approval' };
-    } else {
-      await pool.execute(`UPDATE leave_requests SET status = 'approved' WHERE id = ?`, [requestId]);
-    }
-  } else if (status === 'pending_level_2') {
-    await pool.execute(`UPDATE leave_requests SET status = 'approved' WHERE id = ?`, [requestId]);
-  } else {
-    throw new Error('Invalid leave status or already processed');
-  }
+  if (status === 'Pending') {
+    await pool.execute(`UPDATE leave_requests SET status = 'Approved' WHERE id = ?`, [requestId]);
 
-  const [[updatedRequest]] = await pool.execute(`SELECT status FROM leave_requests WHERE id = ?`, [requestId]);
-  if (updatedRequest.status === 'approved') {
     await pool.execute(`
       UPDATE leave_balances 
       SET used = used + ?, balance = balance - ? 
-      WHERE user_id = ? AND leave_type_id = ?
-    `, [leaveDays, leaveDays, user_id, leave_type_id]);
+      WHERE user_id = ? AND leave_type_id = ?`,
+      [leaveDays, leaveDays, user_id, leave_type_id]);
+
+    return { nextStep: 'Approved' };
   }
 
-  return { approved: true };
+  else if (status === 'Pending (L1)') {
+    await pool.execute(`UPDATE leave_requests SET status = 'Approved (L2)' WHERE id = ?`, [requestId]);
+    return { nextStep: 'Approved (L2)' };
+  }
+
+  return { message: 'Leave request already processed' };
 };
 
-const rejectLeave = async (requestId) => {
-  const [result] = await pool.execute(
-    `UPDATE leave_requests SET status = 'rejected' WHERE id = ?`,
-    [requestId]
-  );
-  return result;
+module.exports = {
+  getUsersOnLeaveToday,
+  getLeaveBalance,
+  getLeaveTypes,
+  requestLeave,
+  getLeaveHistory,
+  cancelLeave,
+  getIncomingRequests,
+  approveLeave
 };
-
-module.exports = { getUsersOnLeaveToday, rejectLeave, approveLeave, getLeaveBalance, getLeaveTypes, requestLeave, getLeaveHistory, cancelLeave, getIncomingRequests };

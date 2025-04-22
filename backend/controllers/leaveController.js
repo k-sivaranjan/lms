@@ -7,14 +7,17 @@ const {
   cancelLeave,
   getIncomingRequests,
   approveLeave,
-  rejectLeave
+  rejectLeave,
+  addLeaveType,
+  updateLeaveType,
+  deleteLeaveType
 } = require('../models/leaveModel');
 
 const fetchUsersOnLeaveToday = async (req, res) => {
   try {
     const users = await getUsersOnLeaveToday();
     if (users.length === 0) {
-      return res.status(404).json({ message: 'No users are on leave today.' });
+      return res.status(204).json({ message: 'No users are on leave today.' });
     }
     res.json({ count: users.length, users });
   } catch (error) {
@@ -66,7 +69,6 @@ const requestLeaveHandler = async (req, res) => {
   try {
     const { userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason } = req.body;
     const result = await requestLeave(userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason);
-
     res.status(201).json({ message: 'Leave requested successfully', result });
   } catch (err) {
     res.status(500).json({ error: 'Internal server error' });
@@ -123,6 +125,35 @@ const rejectLeaveHandler = async (req, res) => {
   }
 };
 
+const createLeaveHandler = async (req, res) => {
+  try {
+    const result = await addLeaveType(req.body);
+    res.status(200).json({ message: 'Leave type added successfully', result });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add leave type' });
+  }
+};
+
+const updateLeaveHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await updateLeaveType(id, req.body);
+    res.status(200).json({ message: 'Leave type updated successfully', result });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update leave type' });
+  }
+};
+
+const deleteLeaveHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await deleteLeaveType(id);
+    res.status(200).json({ message: 'Leave type deleted successfully', result });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete leave type' });
+  }
+};
+
 module.exports = {
   fetchUsersOnLeaveToday,
   approveLeaveHandler,
@@ -132,5 +163,8 @@ module.exports = {
   requestLeaveHandler,
   getLeaveHistoryHandler,
   cancelLeaveHandler,
-  getIncomingRequestsHandler
+  getIncomingRequestsHandler,
+  createLeaveHandler,
+  updateLeaveHandler,
+  deleteLeaveHandler
 };

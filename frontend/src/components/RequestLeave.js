@@ -17,6 +17,7 @@ function LeaveRequest({ onRequestSuccess }) {
   const [reason, setReason] = useState('');
 
   useEffect(() => {
+    // Fetch leave types from the API
     axios.get('http://localhost:5000/api/leave/types')
       .then((res) => setLeaveTypes(res.data))
       .catch((err) => console.error('Error fetching leave types:', err));
@@ -25,18 +26,20 @@ function LeaveRequest({ onRequestSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validation check
     if (!leaveTypeId || !startDate || !endDate || !reason || (isHalfDay && !halfDayType)) {
       alert('Please fill all required fields.');
       return;
     }
 
+    // Date validation
     if (new Date(endDate) < new Date(startDate)) {
       alert('End date cannot be before start date.');
       return;
     }
 
     try {
-      await axios.post('http://localhost:5000/api/leave/request', {
+      const res = await axios.post('http://localhost:5000/api/leave/request', {
         userId: user.id,
         leaveTypeId,
         startDate,
@@ -46,10 +49,17 @@ function LeaveRequest({ onRequestSuccess }) {
         reason
       });
 
+      const requestId = res.data.result?.insertId;
+
+      // Auto-approve certain leave types (e.g., with leaveTypeId === 9)
+      if (parseInt(leaveTypeId) === 9 && requestId) {
+        await axios.put(`http://localhost:5000/api/leave/approve/${requestId}`);
+      }
+
       alert('Leave requested successfully');
       onRequestSuccess?.();
 
-      // Reset form
+      // Reset form fields
       setLeaveTypeId('');
       setStartDate('');
       setEndDate('');
@@ -64,12 +74,11 @@ function LeaveRequest({ onRequestSuccess }) {
     }
   };
 
+  // Calculate total leave days
   const getLeaveDays = () => {
     if (!startDate || !endDate) return 0;
-
     const start = new Date(startDate);
     const end = new Date(endDate);
-
     const days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
     return days > 0 ? days : 0;
   };
@@ -144,7 +153,6 @@ function LeaveRequest({ onRequestSuccess }) {
         required
       />
 
-      {/* Total leave days shown here */}
       <p className="leave-request-days">
         Total Leave Days: {isHalfDay ? "0.5 (Half Day)" : getLeaveDays()}
       </p>

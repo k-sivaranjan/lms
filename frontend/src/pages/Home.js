@@ -48,7 +48,7 @@ function Home() {
   }, [user]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || user.role === "admin") return;
     const fetchBalance = async () => {
       try {
         const res = await axios.get(`http://localhost:5000/api/leave/balance/${user.id}`);
@@ -80,14 +80,6 @@ function Home() {
   }, [user]);
 
   const handleRequestLeave = () => navigate('/request-leave');
-  const handleCancelLeave = async (leaveId) => {
-    try {
-      await axios.delete(`http://localhost:5000/api/leave/cancel/${leaveId}`);
-      setLeaveHistory(prev => prev.filter(leave => leave.id !== leaveId));
-    } catch {
-      alert('Failed to cancel leave');
-    }
-  };
 
   const handleApproveReject = async (requestId, action) => {
     try {
@@ -131,7 +123,7 @@ function Home() {
               <div className="charts-container">
                 <div className="chart-box">
                   <h4>Total vs Used Leaves</h4>
-                  <ResponsiveContainer width={200} height={200}>
+                  <ResponsiveContainer width={210} height={200}>
                     <PieChart>
                       <Pie data={pieData} cx="50%" cy="50%" label outerRadius={60} dataKey="value">
                         {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
@@ -161,7 +153,7 @@ function Home() {
         <button onClick={handleRequestLeave} className="request-leave-button">Request Leave</button>
       </div>
 
-      {user.role === 'manager' && incomingRequests.length > 0 && (
+      {incomingRequests.length > 0 && (
         <div className="incoming-requests">
           <h3>Leave Requests for Approval</h3>
           <div className="scrollable-table">
@@ -185,7 +177,7 @@ function Home() {
                     <td>{formatDate(req.end_date)}</td>
                     <td>{req.status}</td>
                     <td>
-                      {['pending', 'pending_level_1', 'pending_level_2'].includes(req.status) ? (
+                      {['Pending', 'Pending (L1)', 'Pending (L2)', 'Pending (L2)'].includes(req.status) ? (
                         <>
                           <button className='approve-btn' onClick={() => handleApproveReject(req.id, 'approve')}>Approve</button>
                           <button className='approve-btn reject-btn' onClick={() => handleApproveReject(req.id, 'reject')}>Reject</button>
@@ -203,7 +195,7 @@ function Home() {
       <div className="leave-history">
         {loading.history ? <p>Loading leave history...</p> :
           error.history ? <p>{error.history}</p> :
-            <LeaveHistory leaveHistory={leaveHistory} onCancelLeave={handleCancelLeave} />
+            <LeaveHistory leaveHistory={leaveHistory}/>
         }
       </div>
     </div>

@@ -14,8 +14,7 @@ function AddUser() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = ({ target: { name, value } }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -30,28 +29,21 @@ function AddUser() {
     }
 
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/add-user', formData);
+      const { status } = await axios.post('http://localhost:5000/api/auth/add-user', formData);
 
-      if (res.status === 201) {
+      if (status === 201) {
         setMessage('User created successfully!');
         setError('');
       }
     } catch (err) {
-      console.error(err);
-      if (err.response && err.response.status === 400) {
-        setMessage('');
-        setError('User with this email already exists.');
-      } else {
-        setMessage('');
-        setError('Failed to create user due to server error.');
-      }
+      setMessage('');
+      setError(err.response?.status === 400 ? 'User with this email already exists.' : 'Failed to create user due to server error.');
     }
   };
 
   return (
     <div className="add-user-form">
       <h3>Add New User</h3>
-
       <form autoComplete="off" onSubmit={handleSubmit}>
         <input
           type="text"
@@ -60,7 +52,6 @@ function AddUser() {
           value={formData.name}
           onChange={handleChange}
         />
-
         <input
           type="email"
           name="email"
@@ -68,7 +59,6 @@ function AddUser() {
           value={formData.email}
           onChange={handleChange}
         />
-
         <input
           type="password"
           name="password"
@@ -76,7 +66,6 @@ function AddUser() {
           value={formData.password}
           onChange={handleChange}
         />
-
         <input
           type="number"
           name="reportingManagerId"
@@ -84,17 +73,11 @@ function AddUser() {
           value={formData.reportingManagerId}
           onChange={handleChange}
         />
-
-        <select
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-        >
+        <select name="role" value={formData.role} onChange={handleChange}>
           <option value="">Select Role</option>
           <option value="employee">Employee</option>
           <option value="manager">Manager</option>
         </select>
-
         <button type="submit">Create User</button>
       </form>
 

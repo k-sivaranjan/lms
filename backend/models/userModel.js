@@ -17,7 +17,7 @@ const createUser = async (name, email, password, role, managerId) => {
       VALUES (?, ?, YEAR(CURDATE()), ?, 0)
     `;
 
-    const leaveBalancePromises = leaveTypes.map((leaveType) => 
+    const leaveBalancePromises = leaveTypes.map(leaveType => 
       pool.execute(leaveBalanceQuery, [userId, leaveType.id, leaveType.max_per_year])
     );
 

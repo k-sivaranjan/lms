@@ -1,0 +1,20 @@
+.leave-policy-container {
+    margin-top: 2rem;
+  }
+  
+  .leave-policy-container table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .leave-policy-container th, .leave-policy-container td {
+    padding: 8px;
+    border: 1px solid #ccc;
+    text-align: center;
+  }
+  
+  .leave-policy-container input, .leave-policy-container select {
+    width: 90%;
+    padding: 4px;
+  }
+  

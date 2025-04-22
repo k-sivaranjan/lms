@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import axios from 'axios';
+import LeavePolicy from '../components/LeavePolicy';
 import '../styles/admin.css';
 
-function Admin({ user,logout }) {
+function Admin({ user, logout }) {
   const navigate = useNavigate();
   const [adminRequests, setAdminRequests] = useState([]);
   const [usersOnLeaveToday, setUsersOnLeaveToday] = useState([]);
@@ -19,10 +20,12 @@ function Admin({ user,logout }) {
       fetchAllUsers();
     }
   }, [user]);
+
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
+
   const onAddUser = () => {
     navigate("/add-user");
   };
@@ -34,8 +37,13 @@ function Admin({ user,logout }) {
 
   const fetchUsersOnLeaveToday = async () => {
     const res = await axios.get('http://localhost:5000/api/leave/on-leave-today');
-    setUsersOnLeaveToday(res.data.users);
-    setLeaveUsers(res.data.count);
+    if (!res.data) {
+      setUsersOnLeaveToday([]);
+      setLeaveUsers(0);
+    } else {
+      setUsersOnLeaveToday(res.data.users);
+      setLeaveUsers(res.data.count);
+    }
   };
 
   const fetchAllUsers = async () => {
@@ -67,7 +75,7 @@ function Admin({ user,logout }) {
         <h2>Welcome, Admin</h2>
         <button onClick={handleLogout} className="logout-button">Logout</button>
       </div>
-      
+
       <button className="add-user-btn" onClick={onAddUser}>Add User</button>
       <section className="leave-summary-row">
         <div className="users-on-leave">
@@ -134,7 +142,7 @@ function Admin({ user,logout }) {
                   <td>{formatDate(req.end_date)}</td>
                   <td>{req.status}</td>
                   <td>
-                    {req.status === 'pending' || req.status.includes('pending_level') ? (
+                    {req.status === 'Pending' || req.status.includes('Pending (') ? (
                       <>
                         <button className='approve-btn' onClick={() => handleApproveReject(req.id, 'approve')}>Approve</button>
                         <button className='approve-btn reject-btn' onClick={() => handleApproveReject(req.id, 'reject')}>Reject</button>
@@ -159,6 +167,9 @@ function Admin({ user,logout }) {
             </li>
           ))}
         </ul>
+      </section>
+      <section className='leave-policy'>
+        <LeavePolicy />
       </section>
     </div>
   );

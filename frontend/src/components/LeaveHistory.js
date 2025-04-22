@@ -2,18 +2,16 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import '../styles/history.css';
 
-function LeaveHistory({ leaveHistory, onCancelLeave }) {
+function LeaveHistory({ leaveHistory }) {
   const [selectedLeave, setSelectedLeave] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
   const handleCancel = async (leaveId) => {
-    const confirmCancel = window.confirm('Are you sure you want to cancel this leave?');
-    if (!confirmCancel) return;
+    if (!window.confirm('Are you sure you want to cancel this leave?')) return;
 
     try {
       await axios.put(`http://localhost:5000/api/leave/cancel/${leaveId}`);
       alert('Leave cancelled');
-      onCancelLeave(leaveId);
       closeModal();
     } catch (err) {
       console.error('Failed to cancel leave:', err);
@@ -28,8 +26,9 @@ function LeaveHistory({ leaveHistory, onCancelLeave }) {
 
   const formatStatus = (status) => {
     const statusMap = {
-      pending_level_1: 'Pending (Level 1)',
-      pending_level_2: 'Pending (Level 2)',
+      pending_level_1: 'Pending (L1)',
+      pending_level_2: 'Pending (L2)',
+      pending_level_3: 'Pending (L3)',
       approved: 'Approved',
       rejected: 'Rejected',
     };
@@ -50,8 +49,9 @@ function LeaveHistory({ leaveHistory, onCancelLeave }) {
     const statusOrder = {
       pending_level_1: 0,
       pending_level_2: 1,
-      approved: 2,
-      rejected: 3,
+      pending_level_3: 2,
+      approved: 3,
+      rejected: 4,
     };
     return statusOrder[a.status] - statusOrder[b.status] || new Date(b.created_at) - new Date(a.created_at);
   });
@@ -100,10 +100,9 @@ function LeaveHistory({ leaveHistory, onCancelLeave }) {
             <p><strong>Reason:</strong> {selectedLeave.reason || 'N/A'}</p>
             <p><strong>Manager:</strong> {selectedLeave.manager_name || 'N/A'}</p>
 
-            {selectedLeave.status === 'pending_level_1' && (
+            {new Date(selectedLeave.start_date) > new Date() && (
               <button onClick={() => handleCancel(selectedLeave.id)} className="cancel-button">Cancel Leave</button>
             )}
-
             <button onClick={closeModal} className="close-button">Close</button>
           </div>
         </div>
