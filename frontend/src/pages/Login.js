@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../userContext';
+import axios from 'axios';
 import '../styles/login.css';
 
 function Login() {
@@ -13,22 +14,21 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const res = await axios.post('http://localhost:5000/api/auth/login', {
+        email,
+        password
       });
-      const data = await res.json();
-      if (res.ok) {
-        login(data.user);
-        navigate('/');
+      login(res.data.user);
+      navigate('/');
+    } catch (error) {
+      if (error.response) {
+        setError(error.response.data.error || 'Login failed. Please try again.');
       } else {
-        setError(data.error || 'Login failed. Please try again.');
+        setError('Server error. Please try again.');
       }
-    } catch {
-      setError('Server error. Please try again.');
     }
   };
+  
 
   return (
     <div className="login-container">

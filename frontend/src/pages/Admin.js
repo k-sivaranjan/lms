@@ -7,6 +7,7 @@ import '../styles/admin.css';
 
 function Admin({ user, logout }) {
   const navigate = useNavigate();
+  
   const [adminRequests, setAdminRequests] = useState([]);
   const [usersOnLeaveToday, setUsersOnLeaveToday] = useState([]);
   const [totalUsers, setTotalUsers] = useState(0);

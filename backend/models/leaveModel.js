@@ -123,7 +123,11 @@ const getLeaveHistory = async (userId) => {
 };
 
 const cancelLeave = async (leaveRequestId) => {
-  const [leaveRequest] = await pool.execute('SELECT * FROM leave_requests WHERE id = ?', [leaveRequestId]);
+  const [leaveRequest] = await pool.execute(
+    'SELECT * FROM leave_requests WHERE id = ?',
+    [leaveRequestId]
+  );
+
   if (leaveRequest.length === 0) {
     throw new Error('Leave request not found');
   }
@@ -134,28 +138,30 @@ const cancelLeave = async (leaveRequestId) => {
   const start = new Date(start_date);
   const end = new Date(end_date);
   let totalDays = (end - start) / (1000 * 60 * 60 * 24) + 1;
+  if (is_half_day) totalDays = 0.5;
 
-  if (is_half_day) {
-    totalDays = 0.5;
-  }
-  const cancelQuery = 'UPDATE leave_requests SET status = "cancelled" WHERE id = ?';
-  await pool.execute(cancelQuery, [leaveRequestId]);
+  await pool.execute('UPDATE leave_requests SET status = "cancelled" WHERE id = ?', [leaveRequestId]);
 
   if (status === 'Approved') {
-    const updateBalanceQuery = `
-      UPDATE leave_balances
-      SET balance = balance + ?, used = used - ?
-      WHERE user_id = ? AND leave_type_id = ? AND year = YEAR(?)
-    `;
-    await pool.execute(updateBalanceQuery, [
-      totalDays,
-      totalDays,
-      user_id,
-      leave_type_id,
-      start_date
-    ]);
-  }
+    const leaveTypesOnlyUsed = [9, 10];
 
+    if (leaveTypesOnlyUsed.includes(leave_type_id)) {
+      await pool.execute(
+        `UPDATE leave_balances
+         SET used = used - ?
+         WHERE user_id = ? AND leave_type_id = ? AND year = YEAR(?)`,
+        [totalDays, user_id, leave_type_id, start_date]
+      );
+    } else {
+      await pool.execute(
+        `UPDATE leave_balances
+         SET balance = balance + ?, used = used - ?
+         WHERE user_id = ? AND leave_type_id = ? AND year = YEAR(?)`,
+        [totalDays, totalDays, user_id, leave_type_id, start_date]
+      );
+    }
+  }
+  
   return { success: true, message: 'Leave request cancelled successfully' };
 };
 
@@ -242,6 +248,36 @@ const approveLeave = async (requestId) => {
   const multiApprover = leaveTypeRows[0]?.multi_approver;
 
   if (status === 'Pending') {
+    await pool.execute(
+      `UPDATE leave_requests SET status = 'Approved' WHERE id = ?`,
+      [requestId]
+    );
+  
+    if (leave_type_id === 9 || leave_type_id === 10) {
+      await pool.execute(
+        `UPDATE leave_balances 
+         SET used = used + ? 
+         WHERE user_id = ? AND leave_type_id = ?`,
+        [leaveDays, user_id, leave_type_id]
+      );
+    } else {
+      await pool.execute(
+        `UPDATE leave_balances 
+         SET used = used + ?, balance = balance - ? 
+         WHERE user_id = ? AND leave_type_id = ?`,
+        [leaveDays, leaveDays, user_id, leave_type_id]
+      );
+    }
+  
+    return { nextStep: 'Approved' };
+  }
+  
+  else if (status === 'Pending (L1)') {
+    await pool.execute(`UPDATE leave_requests SET status = 'Pending (L2)' WHERE id = ?`, [requestId]);
+    return { nextStep: 'Approved (L2)' };
+  }
+
+  else if (status === 'Pending (L2)') {
     await pool.execute(`UPDATE leave_requests SET status = 'Approved' WHERE id = ?`, [requestId]);
 
     await pool.execute(`
@@ -251,11 +287,6 @@ const approveLeave = async (requestId) => {
       [leaveDays, leaveDays, user_id, leave_type_id]);
 
     return { nextStep: 'Approved' };
-  }
-
-  else if (status === 'Pending (L1)') {
-    await pool.execute(`UPDATE leave_requests SET status = 'Approved (L2)' WHERE id = ?`, [requestId]);
-    return { nextStep: 'Approved (L2)' };
   }
 
   return { message: 'Leave request already processed' };

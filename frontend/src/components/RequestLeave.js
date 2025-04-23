@@ -26,13 +26,11 @@ function LeaveRequest({ onRequestSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation check
     if (!leaveTypeId || !startDate || !endDate || !reason || (isHalfDay && !halfDayType)) {
       alert('Please fill all required fields.');
       return;
     }
 
-    // Date validation
     if (new Date(endDate) < new Date(startDate)) {
       alert('End date cannot be before start date.');
       return;
@@ -51,7 +49,6 @@ function LeaveRequest({ onRequestSuccess }) {
 
       const requestId = res.data.result?.insertId;
 
-      // Auto-approve certain leave types (e.g., with leaveTypeId === 9)
       if (parseInt(leaveTypeId) === 9 && requestId) {
         await axios.put(`http://localhost:5000/api/leave/approve/${requestId}`);
       }
@@ -59,7 +56,6 @@ function LeaveRequest({ onRequestSuccess }) {
       alert('Leave requested successfully');
       onRequestSuccess?.();
 
-      // Reset form fields
       setLeaveTypeId('');
       setStartDate('');
       setEndDate('');
@@ -74,7 +70,6 @@ function LeaveRequest({ onRequestSuccess }) {
     }
   };
 
-  // Calculate total leave days
   const getLeaveDays = () => {
     if (!startDate || !endDate) return 0;
     const start = new Date(startDate);
