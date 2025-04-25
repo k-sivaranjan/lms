@@ -7,7 +7,7 @@ import '../styles/admin.css';
 
 function Admin({ user, logout }) {
   const navigate = useNavigate();
-  
+
   const [adminRequests, setAdminRequests] = useState([]);
   const [usersOnLeaveToday, setUsersOnLeaveToday] = useState([]);
   const [totalUsers, setTotalUsers] = useState(0);
@@ -118,11 +118,9 @@ function Admin({ user, logout }) {
         </div>
       </section>
 
-      <section className="admin-requests">
-        <h3>Leave Requests Needing Your Action</h3>
-        {adminRequests.length === 0 ? (
-          <p>No pending requests</p>
-        ) : (
+      {adminRequests.length > 0 && (
+        <section className="admin-requests">
+          <h3>Leave Requests Needing Your Action</h3>
           <table>
             <thead>
               <tr>
@@ -145,8 +143,8 @@ function Admin({ user, logout }) {
                   <td>
                     {req.status === 'Pending' || req.status.includes('Pending (') ? (
                       <>
-                        <button className='approve-btn' onClick={() => handleApproveReject(req.id, 'approve')}>Approve</button>
-                        <button className='approve-btn reject-btn' onClick={() => handleApproveReject(req.id, 'reject')}>Reject</button>
+                        <button className="approve-btn" onClick={() => handleApproveReject(req.id, 'approve')}>Approve</button>
+                        <button className="approve-btn reject-btn" onClick={() => handleApproveReject(req.id, 'reject')}>Reject</button>
                       </>
                     ) : (
                       'No actions'
@@ -156,19 +154,36 @@ function Admin({ user, logout }) {
               ))}
             </tbody>
           </table>
-        )}
-      </section>
+        </section>
+      )}
 
       <section className="all-users">
         <h3>All Users</h3>
-        <ul>
-          {allUsers.map(user => (
-            <li key={user.id}>
-              {user.name} ({user.role})
-            </li>
-          ))}
-        </ul>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allUsers.map(user => {
+              const isOnLeave = usersOnLeaveToday.some(u => u.id === user.id);
+              return (
+                <tr key={user.id}>
+                  <td>{user.id}</td>
+                  <td>{user.name} {<button className={`status-btn ${isOnLeave ? 'out' : 'in'}`}>
+                    {isOnLeave ? 'Out' : 'In'}
+                  </button>}</td>
+                  <td>{user.role}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </section>
+
       <section className='leave-policy'>
         <LeavePolicy />
       </section>

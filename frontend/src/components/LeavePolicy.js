@@ -78,7 +78,7 @@ function LeavePolicy() {
               <td>
                 <input
                   type="number"
-                  value={lt.max_days}
+                  value={lt.max_per_year}
                   onChange={(e) => handleChange(index, 'max_days', Number(e.target.value))}
                 />
               </td>
@@ -95,8 +95,8 @@ function LeavePolicy() {
                 </select>
               </td>
               <td>
-                <button onClick={() => handleUpdate(lt.id, lt)}>Save</button>
-                <button onClick={() => handleDelete(lt.id)}>Delete</button>
+                <button className={`status-btn ${'in'}`} onClick={() => handleUpdate(lt.id, lt)}>Save</button>
+                <button className={`status-btn ${'out'}`} onClick={() => handleDelete(lt.id)}>Delete</button>
               </td>
             </tr>
           ))}
@@ -128,7 +128,7 @@ function LeavePolicy() {
               </select>
             </td>
             <td>
-              <button onClick={handleAdd}>Add</button>
+              <button className='add-user-btn' onClick={handleAdd}>Add</button>
             </td>
           </tr>
         </tbody>

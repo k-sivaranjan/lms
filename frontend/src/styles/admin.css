@@ -26,12 +26,15 @@
   justify-content: space-between;
   gap: 40px;
   margin-bottom: 30px;
+  height:400px;
 }
 
 .users-on-leave, .leave-summary-chart {
   flex: 1;
   background-color: #f9f9f9;
   padding: 20px;
+  height:350px;
+  overflow:auto;
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
@@ -44,8 +47,10 @@
 section {
   margin-bottom: 30px;
   padding: 10px;
+  height: 500px;
   border: 1px solid #ddd;
   border-radius: 10px;
+  overflow: auto;
 }
 
 table {
@@ -57,11 +62,27 @@ table {
 th, td {
   padding: 8px 12px;
   border: 1px solid #ccc;
-  text-align: center;
+  text-align: left;
 }
 
 button {
   margin-right: 5px;
-  padding: 5px 10px;
+  padding: 5px 5px;
   cursor: pointer;
+}
+
+.status-btn {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-weight: bold;
+}
+
+.status-btn.in {
+  background-color: #4caf50;
+}
+
+.status-btn.out {
+  background-color: #f44336;
 }
