@@ -83,6 +83,7 @@ function Home() {
 
   const handleApproveReject = async (requestId, action) => {
     try {
+      console.log(requestId)
       await axios.put(`http://localhost:5000/api/leave/${action}/${requestId}`);
       alert(`Request ${action}ed successfully`);
       setIncomingRequests(prev => prev.map(req => req.id === requestId ? { ...req, status: action } : req));

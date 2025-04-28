@@ -117,8 +117,8 @@ const approveLeaveHandler = async (req, res) => {
 
 const rejectLeaveHandler = async (req, res) => {
   try {
-    const requestId = req.params.rejectId;
-    const result = await rejectLeave(requestId);
+    const {rejectId} = req.params;
+    const result = await rejectLeave(rejectId);
     res.status(200).json({ message: 'Leave rejected', result });
   } catch (err) {
     res.status(500).json({ error: 'Failed to reject leave' });
@@ -127,7 +127,8 @@ const rejectLeaveHandler = async (req, res) => {
 
 const createLeaveHandler = async (req, res) => {
   try {
-    const result = await addLeaveType(req.body);
+    const {name,max_days,multi_approver}= req.body;
+    const result = await addLeaveType(name,max_days,multi_approver);
     res.status(200).json({ message: 'Leave type added successfully', result });
   } catch (err) {
     res.status(500).json({ error: 'Failed to add leave type' });
@@ -137,7 +138,8 @@ const createLeaveHandler = async (req, res) => {
 const updateLeaveHandler = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await updateLeaveType(id, req.body);
+    const {name, max_per_year, multi_approver} = req.body
+    const result = await updateLeaveType(id,name, max_per_year, multi_approver);
     res.status(200).json({ message: 'Leave type updated successfully', result });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update leave type' });

@@ -161,7 +161,7 @@ const cancelLeave = async (leaveRequestId) => {
       );
     }
   }
-  
+
   return { success: true, message: 'Leave request cancelled successfully' };
 };
 
@@ -252,7 +252,7 @@ const approveLeave = async (requestId) => {
       `UPDATE leave_requests SET status = 'Approved' WHERE id = ?`,
       [requestId]
     );
-  
+
     if (leave_type_id === 9 || leave_type_id === 10) {
       await pool.execute(
         `UPDATE leave_balances 
@@ -268,10 +268,10 @@ const approveLeave = async (requestId) => {
         [leaveDays, leaveDays, user_id, leave_type_id]
       );
     }
-  
+
     return { nextStep: 'Approved' };
   }
-  
+
   else if (status === 'Pending (L1)') {
     await pool.execute(`UPDATE leave_requests SET status = 'Pending (L2)' WHERE id = ?`, [requestId]);
     return { nextStep: 'Approved (L2)' };
@@ -292,6 +292,46 @@ const approveLeave = async (requestId) => {
   return { message: 'Leave request already processed' };
 };
 
+const rejectLeave = async (requestId) => {
+  const [requestRows] = await pool.execute(`SELECT * FROM leave_requests WHERE id = ?`, [requestId]);
+  const request = requestRows[0];
+  if (!request) throw new Error('Leave request not found');
+
+  await pool.execute(
+    `UPDATE leave_requests 
+     SET status = 'Rejected'
+     WHERE id = ?`,
+    [requestId]
+  );
+
+  return { success: true, message: 'Leave request rejected successfully' };
+};
+
+const addLeaveType = async (name, max_per_year, multiApprover = 1) => {
+  const query = `
+    INSERT INTO leave_types (name, max_per_year, multi_approver)
+    VALUES (?, ?, ?)
+  `;
+  const [result] = await pool.execute(query, [name, max_per_year, multiApprover]);
+  return result;
+};
+
+const updateLeaveType = async (leaveTypeId, name, max_per_year, multiApprover = 1) => {
+  const query = `
+    UPDATE leave_types
+    SET name = ?, max_per_year = ?, multi_approver = ?
+    WHERE id = ?
+  `;
+  const [result] = await pool.execute(query, [name, max_per_year, multiApprover, leaveTypeId]);
+  return result;
+};
+
+const deleteLeaveType = async (leaveTypeId) => {
+  const query = `DELETE FROM leave_types WHERE id = ?`;
+  const [result] = await pool.execute(query, [leaveTypeId]);
+  return result;
+};
+
 module.exports = {
   getUsersOnLeaveToday,
   getLeaveBalance,
@@ -300,5 +340,9 @@ module.exports = {
   getLeaveHistory,
   cancelLeave,
   getIncomingRequests,
-  approveLeave
+  approveLeave,
+  rejectLeave,
+  addLeaveType,
+  updateLeaveType,
+  deleteLeaveType
 };
