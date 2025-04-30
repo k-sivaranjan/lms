@@ -68,10 +68,12 @@ const fetchLeaveTypes = async (req, res) => {
 const requestLeaveHandler = async (req, res) => {
   try {
     const { userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason } = req.body;
+
     const result = await requestLeave(userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason);
+
     res.status(201).json({ message: 'Leave requested successfully', result });
   } catch (err) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(400).json({ error: err.message });
   }
 };
 

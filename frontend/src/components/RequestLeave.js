@@ -17,7 +17,6 @@ function LeaveRequest({ onRequestSuccess }) {
   const [reason, setReason] = useState('');
 
   useEffect(() => {
-    // Fetch leave types from the API
     axios.get('http://localhost:5000/api/leave/types')
       .then((res) => setLeaveTypes(res.data))
       .catch((err) => console.error('Error fetching leave types:', err));
@@ -25,17 +24,17 @@ function LeaveRequest({ onRequestSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!leaveTypeId || !startDate || !endDate || !reason || (isHalfDay && !halfDayType)) {
       alert('Please fill all required fields.');
       return;
     }
-
+  
     if (new Date(endDate) < new Date(startDate)) {
       alert('End date cannot be before start date.');
       return;
     }
-
+  
     try {
       const res = await axios.post('http://localhost:5000/api/leave/request', {
         userId: user.id,
@@ -46,27 +45,33 @@ function LeaveRequest({ onRequestSuccess }) {
         halfDayType: isHalfDay ? halfDayType : null,
         reason
       });
-
+  
       const requestId = res.data.result?.insertId;
-
+  
       if (parseInt(leaveTypeId) === 9 && requestId) {
         await axios.put(`http://localhost:5000/api/leave/approve/${requestId}`);
       }
-
+  
       alert('Leave requested successfully');
       onRequestSuccess?.();
-
+  
       setLeaveTypeId('');
       setStartDate('');
       setEndDate('');
       setIsHalfDay(false);
       setHalfDayType('');
       setReason('');
-
+  
       navigate('/');
+  
     } catch (err) {
       console.error('Error submitting leave request:', err);
-      alert('Error submitting leave request');
+  
+      if (err.response && err.response.data && err.response.data.error) {
+        alert(err.response.data.error);
+      } else {
+        alert('Error submitting leave request');
+      }
     }
   };
 

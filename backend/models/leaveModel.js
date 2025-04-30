@@ -50,7 +50,26 @@ const requestLeave = async (
 ) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
-  const leaveDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+  const leaveDays = isHalfDay ? 0.5 : Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+  const [leaveBalanceRows] = await pool.execute(
+    `SELECT balance, used FROM leave_balances WHERE user_id = ? AND leave_type_id = ?`,
+    [userId, leaveTypeId]
+  );
+
+  const leaveBalance = leaveBalanceRows[0];
+  
+  if (!leaveBalance) {
+    throw new Error('Leave balance not found for the user or leave type');
+  }
+
+  const totalUsedLeave = leaveBalance.used;
+  const maxLeaveDays = leaveBalance.balance + leaveBalance.used;
+
+  if (totalUsedLeave + leaveDays > maxLeaveDays) {
+    throw new Error(`You have exceeded the maximum allowed leave days for this leave type. Max allowed: ${maxLeaveDays} days.`);
+  }
 
   const [leaveTypeRows] = await pool.execute(
     `SELECT multi_approver FROM leave_types WHERE id = ?`,
@@ -64,11 +83,9 @@ const requestLeave = async (
   );
   const { role, manager_id } = userRows[0];
 
-  let maxApproverByRole = 1;
-  if (role === 'employee') maxApproverByRole = 3;
-  else if (role === 'manager') maxApproverByRole = 2;
+  const maxApproverByRole = role === 'employee' ? 3 : role === 'manager' ? 2 : 1;
 
-  const finalApprovalLevel = Math.min(multiApprover, maxApproverByRole);
+  const finalApprovalLevel = leaveDays >= 5 ? maxApproverByRole : Math.min(multiApprover, maxApproverByRole);
 
   let level2ApproverId = null;
   if (manager_id) {
@@ -79,13 +96,21 @@ const requestLeave = async (
     level2ApproverId = managerRows[0]?.manager_id;
   }
 
-  let initialStatus = 'Pending';
-  if (finalApprovalLevel > 1) initialStatus = 'Pending (L1)';
+  let level3ApproverId = null;
+  if (level2ApproverId) {
+    const [hrRows] = await pool.execute(
+      `SELECT manager_id FROM users WHERE id = ?`,
+      [level2ApproverId]
+    );
+    level3ApproverId = hrRows[0]?.manager_id;
+  }
+
+  const initialStatus = finalApprovalLevel > 1 ? 'Pending (L1)' : 'Pending';
 
   const query = `
     INSERT INTO leave_requests 
-    (user_id, leave_type_id, start_date, end_date, is_half_day, half_day_type, reason, status, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+    (user_id, leave_type_id, start_date, end_date, is_half_day, half_day_type, reason, status, final_approval_level, total_days, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
   `;
   const [result] = await pool.execute(query, [
     userId,
@@ -96,6 +121,8 @@ const requestLeave = async (
     halfDayType || null,
     reason || null,
     initialStatus,
+    finalApprovalLevel,
+    leaveDays
   ]);
 
   return result;
@@ -233,25 +260,16 @@ const approveLeave = async (requestId) => {
   const request = requestRows[0];
   if (!request) throw new Error('Leave request not found');
 
-  const { user_id, leave_type_id, start_date, end_date, is_half_day, status } = request;
+  const { user_id, leave_type_id, status, total_days, final_approval_level } = request;
 
-  let leaveDays;
-  if (is_half_day) {
-    leaveDays = 0.5;
-  } else {
-    const start = new Date(start_date);
-    const end = new Date(end_date);
-    leaveDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  if (total_days === null) {
+    throw new Error('Total days not calculated');
   }
 
-  const [leaveTypeRows] = await pool.execute(`SELECT multi_approver FROM leave_types WHERE id = ?`, [leave_type_id]);
-  const multiApprover = leaveTypeRows[0]?.multi_approver;
+  let leaveDays = total_days;
 
   if (status === 'Pending') {
-    await pool.execute(
-      `UPDATE leave_requests SET status = 'Approved' WHERE id = ?`,
-      [requestId]
-    );
+    await pool.execute(`UPDATE leave_requests SET status = 'Approved' WHERE id = ?`, [requestId]);
 
     if (leave_type_id === 9 || leave_type_id === 10) {
       await pool.execute(
@@ -278,6 +296,23 @@ const approveLeave = async (requestId) => {
   }
 
   else if (status === 'Pending (L2)') {
+    if (final_approval_level === 3) {
+      await pool.execute(`UPDATE leave_requests SET status = 'Pending (L3)' WHERE id = ?`, [requestId]);
+      return { nextStep: 'Approved (L3)' };
+    } else {
+      await pool.execute(`UPDATE leave_requests SET status = 'Approved' WHERE id = ?`, [requestId]);
+
+      await pool.execute(`
+        UPDATE leave_balances 
+        SET used = used + ?, balance = balance - ? 
+        WHERE user_id = ? AND leave_type_id = ?`,
+        [leaveDays, leaveDays, user_id, leave_type_id]);
+
+      return { nextStep: 'Approved' };
+    }
+  }
+
+  else if (status === 'Pending (L3)') {
     await pool.execute(`UPDATE leave_requests SET status = 'Approved' WHERE id = ?`, [requestId]);
 
     await pool.execute(`

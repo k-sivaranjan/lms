@@ -46,7 +46,7 @@ function LeavePolicy() {
 
   const handleAdd = async () => {
     try {
-      await axios.post('http://localhost:5000/api/leave/types', newLeave);
+      await axios.post('http://localhost:5000/api/leave/create-leave-type', newLeave);
       setNewLeave({ name: '', max_days: 0, multi_approver: 1 });
       fetchLeaveTypes();
     } catch (err) {
@@ -61,7 +61,7 @@ function LeavePolicy() {
         <thead>
           <tr>
             <th>Name</th>
-            <th>Max Days</th>
+            <th>Max Days Per Year</th>
             <th>Multi Approver</th>
             <th>Actions</th>
           </tr>

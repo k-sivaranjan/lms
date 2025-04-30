@@ -1,4 +1,6 @@
 const express = require('express');
+const router = express.Router();
+
 const {
   fetchLeaveBalance,
   fetchUsersOnLeaveToday,
@@ -8,22 +10,24 @@ const {
   requestLeaveHandler,
   getLeaveHistoryHandler,
   cancelLeaveHandler,
-  getIncomingRequestsHandler,createLeaveHandler,updateLeaveHandler,deleteLeaveHandler
+  getIncomingRequestsHandler,
+  createLeaveHandler,
+  updateLeaveHandler,
+  deleteLeaveHandler
 } = require('../controllers/leaveController');
+const { authMiddleware, roleMiddleware } = require('../middleware/middleware');
 
-const router = express.Router();
-
-router.get('/balance/:userId', fetchLeaveBalance);
-router.post('/request', requestLeaveHandler);
-router.get('/history/:userId', getLeaveHistoryHandler);
-router.put('/cancel/:leaveRequestId', cancelLeaveHandler);
-router.get('/types', fetchLeaveTypes);
-router.get('/requests/:userId', getIncomingRequestsHandler);
-router.put('/approve/:approveId', approveLeaveHandler);
-router.put('/reject/:rejectId', rejectLeaveHandler);
-router.get('/on-leave-today', fetchUsersOnLeaveToday);
-router.post('/types',createLeaveHandler);
-router.put('/types/:id', updateLeaveHandler);
-router.delete('/types/:id',deleteLeaveHandler);
+router.get('/balance/:userId', authMiddleware, fetchLeaveBalance);
+router.post('/request', authMiddleware, requestLeaveHandler);
+router.get('/history/:userId', authMiddleware, getLeaveHistoryHandler);
+router.put('/cancel/:leaveRequestId', authMiddleware, cancelLeaveHandler);
+router.get('/types', authMiddleware, fetchLeaveTypes);
+router.get('/requests/:userId', authMiddleware, getIncomingRequestsHandler);
+router.put('/approve/:approveId', authMiddleware, approveLeaveHandler);
+router.put('/reject/:rejectId', authMiddleware, rejectLeaveHandler);
+router.get('/on-leave-today', authMiddleware, roleMiddleware('admin'), fetchUsersOnLeaveToday);
+router.post('/create-leave-type', authMiddleware, roleMiddleware('admin'), createLeaveHandler);
+router.put('/types/:id', authMiddleware, roleMiddleware('admin'), updateLeaveHandler);
+router.delete('/types/:id', authMiddleware, roleMiddleware('admin'), deleteLeaveHandler);
 
 module.exports = router;

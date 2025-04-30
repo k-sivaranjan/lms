@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../userContext';
 import axios from 'axios';
@@ -19,16 +19,17 @@ function Login() {
         password
       });
       login(res.data.user);
+      localStorage.setItem('token', res.data.token);
       navigate('/');
     } catch (error) {
       if (error.response) {
+        console.log(error);
         setError(error.response.data.error || 'Login failed. Please try again.');
       } else {
         setError('Server error. Please try again.');
       }
     }
   };
-  
 
   return (
     <div className="login-container">
@@ -37,11 +38,23 @@ function Login() {
       <form onSubmit={handleSubmit} className="login-form">
         <div className="form-group">
           <label>Email:</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="form-input" />
+          <input 
+            type="email" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            required 
+            className="form-input" 
+          />
         </div>
         <div className="form-group">
           <label>Password:</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="form-input" />
+          <input 
+            type="password" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            required 
+            className="form-input" 
+          />
         </div>
         <button type="submit" className="submit-button">Login</button>
       </form>

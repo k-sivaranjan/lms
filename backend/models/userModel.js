@@ -16,8 +16,7 @@ const createUser = async (name, email, password, role, managerId) => {
       INSERT INTO leave_balances (user_id, leave_type_id, year, balance, used)
       VALUES (?, ?, YEAR(CURDATE()), ?, 0)
     `;
-
-    const leaveBalancePromises = leaveTypes.map(leaveType => 
+    const leaveBalancePromises = leaveTypes.map(leaveType =>
       pool.execute(leaveBalanceQuery, [userId, leaveType.id, leaveType.max_per_year])
     );
 
@@ -29,11 +28,12 @@ const createUser = async (name, email, password, role, managerId) => {
   }
 };
 
-const getUserByEmail = async (email) => {
+const getUser = async (email) => {
   const query = 'SELECT * FROM users WHERE email = ?';
   const [rows] = await pool.execute(query, [email]);
   return rows[0];
 };
+
 
 const getAllUsers = async () => {
   const query = 'SELECT id, name, email, role FROM users';
@@ -41,4 +41,4 @@ const getAllUsers = async () => {
   return rows;
 };
 
-module.exports = { createUser, getUserByEmail, getAllUsers };
+module.exports = { createUser, getUser, getAllUsers };

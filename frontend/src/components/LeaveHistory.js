@@ -100,8 +100,10 @@ function LeaveHistory({ leaveHistory }) {
             <p><strong>Reason:</strong> {selectedLeave.reason || 'N/A'}</p>
             <p><strong>Manager:</strong> {selectedLeave.manager_name || 'N/A'}</p>
 
-            {new Date(selectedLeave.start_date) > new Date() && (
-              <button onClick={() => handleCancel(selectedLeave.id)} className="cancel-button">Cancel Leave</button>
+            {selectedLeave.status !== "cancelled" && new Date(selectedLeave.start_date) > new Date() && (
+              <button onClick={() => handleCancel(selectedLeave.id)} className="cancel-button">
+                Cancel Leave
+              </button>
             )}
             <button onClick={closeModal} className="close-button">Close</button>
           </div>

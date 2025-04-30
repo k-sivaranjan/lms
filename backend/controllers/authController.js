@@ -1,4 +1,8 @@
-const { getAllUsers, createUser, getUserByEmail } = require('../models/userModel');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+const { getAllUsers, createUser, getUser } = require('../models/userModel');
+
+const SECRET_KEY = process.env.JWT_SECRET;
 
 const register = async (req, res) => {
   try {
@@ -20,13 +24,23 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await getUserByEmail(email);
+    const user = await getUser(email);
+
     if (!user || user.password !== password) {
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
-    res.status(200).json({ message: 'Login successful', user });
+    const payload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    };
+
+    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
+
+    res.status(200).json({ message: 'Login successful', user, token });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
