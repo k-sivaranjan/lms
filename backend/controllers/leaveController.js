@@ -21,13 +21,14 @@ const fetchUsersOnLeaveToday = async (req, res) => {
     }
     res.json({ count: users.length, users });
   } catch (error) {
+    console.error('Fetch users on leave error:', error);
     res.status(500).json({ error: 'Failed to fetch users on leave today' });
   }
 };
 
 const fetchLeaveBalance = async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = parseInt(req.params.userId);
     const currentYear = new Date().getFullYear();
     const balance = await getLeaveBalance(userId, currentYear);
 
@@ -40,7 +41,7 @@ const fetchLeaveBalance = async (req, res) => {
       totalBalance += item.balance;
       totalLeaves += (item.balance + item.used);
       return {
-        leave_type: item.leave_type,
+        leave_type: item.leaveType.name,
         total: item.balance + item.used,
         balance: item.balance,
         used: item.used
@@ -49,6 +50,7 @@ const fetchLeaveBalance = async (req, res) => {
 
     res.json({ totalBalance, totalLeaves, leaveDetails });
   } catch (error) {
+    console.error('Fetch leave balance error:', error);
     res.status(500).json({ error: 'Failed to fetch leave balance' });
   }
 };
@@ -61,6 +63,7 @@ const fetchLeaveTypes = async (req, res) => {
     }
     res.json(leaveTypes);
   } catch (error) {
+    console.error('Fetch leave types error:', error);
     res.status(500).json({ error: 'Failed to fetch leave types' });
   }
 };
@@ -69,105 +72,122 @@ const requestLeaveHandler = async (req, res) => {
   try {
     const { userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason } = req.body;
 
-    const result = await requestLeave(userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason);
+    const result = await requestLeave(
+      userId, 
+      leaveTypeId, 
+      startDate, 
+      endDate, 
+      isHalfDay, 
+      halfDayType, 
+      reason
+    );
 
     res.status(201).json({ message: 'Leave requested successfully', result });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('Request leave error:', err);
+    res.status(400).json({ error: err instanceof Error ? err.message : 'An error occurred' });
   }
 };
 
 const getLeaveHistoryHandler = async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = parseInt(req.params.userId);
     const leaveHistory = await getLeaveHistory(userId);
     res.status(200).json({ leaveHistory });
   } catch (err) {
+    console.error('Get leave history error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 const cancelLeaveHandler = async (req, res) => {
   try {
-    const { leaveRequestId } = req.params;
+    const leaveRequestId = parseInt(req.params.leaveRequestId);
     const result = await cancelLeave(leaveRequestId);
     res.status(200).json({ message: 'Leave canceled successfully' });
   } catch (err) {
+    console.error('Cancel leave error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 const getIncomingRequestsHandler = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = parseInt(req.params.userId);
     const requests = await getIncomingRequests(userId);
     res.status(200).json({ incomingRequests: requests });
   } catch (err) {
+    console.error('Get incoming requests error:', err);
     res.status(500).json({ error: 'Failed to fetch incoming requests' });
   }
 };
 
 const approveLeaveHandler = async (req, res) => {
   try {
-    const requestId = req.params.approveId;
+    const requestId = parseInt(req.params.approveId);
     const result = await approveLeave(requestId);
     res.status(200).json({ message: 'Leave approval processed', result });
   } catch (err) {
+    console.error('Approve leave error:', err);
     res.status(500).json({ error: 'Failed to approve leave' });
   }
 };
 
 const rejectLeaveHandler = async (req, res) => {
   try {
-    const {rejectId} = req.params;
+    const rejectId = parseInt(req.params.rejectId);
     const result = await rejectLeave(rejectId);
     res.status(200).json({ message: 'Leave rejected', result });
   } catch (err) {
+    console.error('Reject leave error:', err);
     res.status(500).json({ error: 'Failed to reject leave' });
   }
 };
 
 const createLeaveHandler = async (req, res) => {
   try {
-    const {name,max_days,multi_approver}= req.body;
-    const result = await addLeaveType(name,max_days,multi_approver);
+    const { name, maxPerYear, multiApprover } = req.body;
+    const result = await addLeaveType(name, maxPerYear, multiApprover);
     res.status(200).json({ message: 'Leave type added successfully', result });
   } catch (err) {
+    console.error('Create leave type error:', err);
     res.status(500).json({ error: 'Failed to add leave type' });
   }
 };
 
 const updateLeaveHandler = async (req, res) => {
   try {
-    const { id } = req.params;
-    const {name, max_per_year, multi_approver} = req.body
-    const result = await updateLeaveType(id,name, max_per_year, multi_approver);
+    const id = parseInt(req.params.id);
+    const { name, maxPerYear, multiApprover } = req.body;
+    const result = await updateLeaveType(id, name, maxPerYear, multiApprover);
     res.status(200).json({ message: 'Leave type updated successfully', result });
   } catch (err) {
+    console.error('Update leave type error:', err);
     res.status(500).json({ error: 'Failed to update leave type' });
   }
 };
 
 const deleteLeaveHandler = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
     const result = await deleteLeaveType(id);
     res.status(200).json({ message: 'Leave type deleted successfully', result });
   } catch (err) {
+    console.error('Delete leave type error:', err);
     res.status(500).json({ error: 'Failed to delete leave type' });
   }
 };
 
 module.exports = {
   fetchUsersOnLeaveToday,
-  approveLeaveHandler,
-  rejectLeaveHandler,
   fetchLeaveBalance,
   fetchLeaveTypes,
   requestLeaveHandler,
   getLeaveHistoryHandler,
   cancelLeaveHandler,
   getIncomingRequestsHandler,
+  approveLeaveHandler,
+  rejectLeaveHandler,
   createLeaveHandler,
   updateLeaveHandler,
   deleteLeaveHandler

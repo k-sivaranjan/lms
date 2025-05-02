@@ -1,10 +1,9 @@
 const express = require('express');
-const { register, login, fetchAllUsers } = require('../controllers/authController');
-const { authMiddleware, roleMiddleware } = require('../middleware/middleware'); 
 const router = express.Router();
+const { register, login, fetchAllUsers } = require('../controllers/authController.js');
 
+router.post('/register', register);
 router.post('/login', login);
-router.get('/users', authMiddleware, roleMiddleware('admin'), fetchAllUsers);
-router.post('/add-user', authMiddleware, roleMiddleware('admin'), register);
+router.get('/users', fetchAllUsers);
 
 module.exports = router;

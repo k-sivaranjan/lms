@@ -6,7 +6,6 @@ import Home from './pages/Home';
 import RequestLeave from './components/RequestLeave';
 import AddUser from './components/AddUser';
 import axios from 'axios';
-
 function App() {
   useEffect(() => {
     const token = localStorage.getItem('token');

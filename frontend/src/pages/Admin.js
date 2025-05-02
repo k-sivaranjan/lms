@@ -20,7 +20,7 @@ function Admin({ user, logout }) {
       fetchUsersOnLeaveToday();
       fetchAllUsers();
     }
-  }, [user]);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -37,7 +37,7 @@ function Admin({ user, logout }) {
   };
 
   const fetchUsersOnLeaveToday = async () => {
-    const res = await axios.get('http://localhost:5000/api/leave/on-leave-today');
+    const res = await axios.get('http://localhost:5000/api/leave/users-on-leave');
     if (!res.data) {
       setUsersOnLeaveToday([]);
       setLeaveUsers(0);

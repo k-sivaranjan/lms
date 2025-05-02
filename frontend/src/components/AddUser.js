@@ -29,7 +29,7 @@ function AddUser() {
     }
 
     try {
-      const { status } = await axios.post('http://localhost:5000/api/auth/add-user', formData);
+      const { status } = await axios.post('http://localhost:5000/api/auth/register', formData);
 
       if (status === 201) {
         setMessage('User created successfully!');

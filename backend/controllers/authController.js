@@ -1,8 +1,9 @@
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
-const { getAllUsers, createUser, getUser } = require('../models/userModel');
+const jwt  = require('jsonwebtoken');
+const dotenv= require ('dotenv');
+const { getAllUsers, createUser, getUser, getUserByEmail } = require ('../models/userModel.js'); 
 
-const SECRET_KEY = process.env.JWT_SECRET;
+dotenv.config();
+const SECRET_KEY = process.env.JWT_SECRET || 'default_secret_key';
 
 const register = async (req, res) => {
   try {
@@ -16,6 +17,7 @@ const register = async (req, res) => {
     await createUser(name, email, password, role, reportingManagerId);
     res.status(201).json({ message: 'User Added successfully' });
   } catch (err) {
+    console.error('Registration error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -54,8 +56,13 @@ const fetchAllUsers = async (req, res) => {
 
     res.json({ count: users.length, users });
   } catch (error) {
+    console.error('Fetch users error:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 };
 
-module.exports = { register, login, fetchAllUsers };
+module.exports = {
+  register,
+  login,
+  fetchAllUsers,
+}

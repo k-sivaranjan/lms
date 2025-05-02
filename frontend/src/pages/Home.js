@@ -65,7 +65,7 @@ function Home() {
   }, [user]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || user.role === "employee") return;
     const fetchIncomingRequests = async () => {
       try {
         const res = await axios.get(`http://localhost:5000/api/leave/requests/${user.id}`);

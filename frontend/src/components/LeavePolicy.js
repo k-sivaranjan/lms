@@ -4,7 +4,7 @@ import '../styles/policy.css';
 
 function LeavePolicy() {
   const [leaveTypes, setLeaveTypes] = useState([]);
-  const [newLeave, setNewLeave] = useState({ name: '', max_days: 0, multi_approver: 1 });
+  const [newLeave, setNewLeave] = useState({ name: '', maxPerYear: 0, multiApprover: 1 });
 
   useEffect(() => {
     fetchLeaveTypes();
@@ -27,65 +27,62 @@ function LeavePolicy() {
 
   const handleUpdate = async (id, updatedLeave) => {
     try {
-      await axios.put(`http://localhost:5000/api/leave/types/${id}`, updatedLeave);
+      await axios.put(`http://localhost:5000/api/leave/type/${id}`, updatedLeave);
       alert('Leave policy updated');
       fetchLeaveTypes();
-    } catch (err) {
+    } catch {
       alert('Failed to update leave policy');
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/leave/types/${id}`);
+      await axios.delete(`http://localhost:5000/api/leave/type/${id}`);
       fetchLeaveTypes();
-    } catch (err) {
+    } catch {
       alert('Failed to delete leave type');
     }
   };
 
   const handleAdd = async () => {
     try {
-      await axios.post('http://localhost:5000/api/leave/create-leave-type', newLeave);
-      setNewLeave({ name: '', max_days: 0, multi_approver: 1 });
+      await axios.post('http://localhost:5000/api/leave/create-leave', newLeave);
+      setNewLeave({ name: '', maxPerYear: 0, multiApprover: 1 });
       fetchLeaveTypes();
-    } catch (err) {
+    } catch {
       alert('Failed to add leave type');
     }
   };
 
   return (
     <div className="leave-policy-container">
-      <h3>Leave Policy</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Max Days Per Year</th>
-            <th>Multi Approver</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {leaveTypes.map((lt, index) => (
-            <tr key={lt.id}>
-              <td>
-                <input
-                  value={lt.name}
-                  onChange={(e) => handleChange(index, 'name', e.target.value)}
-                />
-              </td>
-              <td>
+      <h3 className="leave-policy-title">Leave Policy</h3>
+      <div className="leave-types-grid">
+        {leaveTypes.map((lt, index) => (
+          <div key={lt.id} className="leave-card">
+            <div className="leave-card-header">
+              <input
+                className="leave-name-input"
+                value={lt.name}
+                onChange={(e) => handleChange(index, 'name', e.target.value)}
+              />
+            </div>
+            <div className="leave-card-body">
+              <div className="leave-field">
+                <label className="leave-label">Max Days Per Year</label>
                 <input
                   type="number"
-                  value={lt.max_per_year}
-                  onChange={(e) => handleChange(index, 'max_days', Number(e.target.value))}
+                  className="leave-input"
+                  value={lt.maxPerYear}
+                  onChange={(e) => handleChange(index, 'maxPerYear', Number(e.target.value))}
                 />
-              </td>
-              <td>
+              </div>
+              <div className="leave-field">
+                <label className="leave-label">Multi Approver</label>
                 <select
-                  value={lt.multi_approver}
-                  onChange={(e) => handleChange(index, 'multi_approver', Number(e.target.value))}
+                  className="leave-select"
+                  value={lt.multiApprover}
+                  onChange={(e) => handleChange(index, 'multiApprover', Number(e.target.value))}
                 >
                   {[0, 1, 2, 3].map((value) => (
                     <option key={value} value={value}>
@@ -93,32 +90,44 @@ function LeavePolicy() {
                     </option>
                   ))}
                 </select>
-              </td>
-              <td>
-                <button className={`status-btn ${'in'}`} onClick={() => handleUpdate(lt.id, lt)}>Save</button>
-                <button className={`status-btn ${'out'}`} onClick={() => handleDelete(lt.id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-          <tr>
-            <td>
-              <input
-                value={newLeave.name}
-                onChange={(e) => setNewLeave({ ...newLeave, name: e.target.value })}
-                placeholder="Leave Name"
-              />
-            </td>
-            <td>
+              </div>
+              <div className="leave-actions">
+                <button className="save-btn" onClick={() => handleUpdate(lt.id, lt)}>
+                  Save
+                </button>
+                <button className="delete-btn" onClick={() => handleDelete(lt.id)}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        <div className="leave-card add-leave-card">
+          <div className="leave-card-header add-card-header">
+            <input
+              className="leave-name-input"
+              value={newLeave.name}
+              onChange={(e) => setNewLeave({ ...newLeave, name: e.target.value })}
+              placeholder="Leave Name"
+            />
+          </div>
+          <div className="leave-card-body">
+            <div className="leave-field">
+              <label className="leave-label">Max Days Per Year</label>
               <input
                 type="number"
-                value={newLeave.max_days}
-                onChange={(e) => setNewLeave({ ...newLeave, max_days: Number(e.target.value) })}
+                className="leave-input"
+                value={newLeave.maxPerYear}
+                onChange={(e) => setNewLeave({ ...newLeave, maxPerYear: Number(e.target.value) })}
               />
-            </td>
-            <td>
+            </div>
+            <div className="leave-field">
+              <label className="leave-label">Multi Approver</label>
               <select
-                value={newLeave.multi_approver}
-                onChange={(e) => setNewLeave({ ...newLeave, multi_approver: Number(e.target.value) })}
+                className="leave-select"
+                value={newLeave.multiApprover}
+                onChange={(e) => setNewLeave({ ...newLeave, multiApprover: Number(e.target.value) })}
               >
                 {[0, 1, 2, 3].map((value) => (
                   <option key={value} value={value}>
@@ -126,13 +135,15 @@ function LeavePolicy() {
                   </option>
                 ))}
               </select>
-            </td>
-            <td>
-              <button className='add-user-btn' onClick={handleAdd}>Add</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+            <div className="leave-actions">
+              <button className="add-btn" onClick={handleAdd}>
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

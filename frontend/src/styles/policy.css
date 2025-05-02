@@ -1,19 +1,158 @@
 .leave-policy-container {
-    margin-top: 2rem;
-  }
-  
-  .leave-policy-container table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .leave-policy-container th, .leave-policy-container td {
-    padding: 8px;
-    border: 1px solid #ccc;
-    text-align: center;
-  }
-  
-  .leave-policy-container input, .leave-policy-container select {
-    width: 90%;
-    padding: 4px;
-  }
+  margin-top: 2rem;
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.leave-policy-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  color: #333;
+}
+
+.leave-types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.leave-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #e0e0e0;
+}
+
+.leave-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.leave-card-header {
+  background-color: #3b82f6;
+  padding: 1rem;
+  color: white;
+}
+
+.leave-name-input {
+  width: 100%;
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.25rem 0;
+  outline: none;
+}
+
+.leave-name-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.leave-card-body {
+  padding: 1rem;
+}
+
+.leave-field, .add-leave-field {
+  margin-bottom: 1rem;
+}
+
+.leave-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #4b5563;
+}
+
+.leave-input,
+.leave-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  font-size: 0.95rem;
+}
+
+.leave-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.add-leave-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.add-leave-title {
+  background-color: #10b981;
+  padding: 1rem;
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.add-leave-form {
+  padding: 1.5rem;
+}
+
+.add-leave-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.save-btn,
+.delete-btn,
+.add-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.save-btn {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #2563eb;
+}
+
+.delete-btn {
+  background-color: #ef4444;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #dc2626;
+}
+
+.add-btn {
+  background-color: #10b981;
+  color: white;
+  padding: 0.625rem 1.25rem;
+  font-size: 1rem;
+}
+
+.add-btn:hover {
+  background-color: #059669;
+}
