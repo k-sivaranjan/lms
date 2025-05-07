@@ -38,6 +38,10 @@ function Home() {
 
   }, [user, navigate]);
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
   //Fetching the leave history of an employee
   const fetchLeaveHistory = async () => {
     try {
