@@ -67,9 +67,9 @@ const LeaveRequest = new EntitySchema({
     },
     totalDays: {
       name: "total_days",
-      type: "decimal",  // Change to 'decimal' to match MySQL definition
+      type: "decimal",
       precision: 4,
-      scale: 2,  // Precision and scale for decimal(4,2)
+      scale: 2,
     },
     createdAt: {
       name: "created_at",

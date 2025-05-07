@@ -1,5 +1,6 @@
 const {
   getUsersOnLeaveToday,
+  getTeamLeave,
   getLeaveBalance,
   getLeaveTypes,
   requestLeave,
@@ -23,6 +24,25 @@ const fetchUsersOnLeaveToday = async (req, res) => {
   } catch (error) {
     console.error('Fetch users on leave error:', error);
     res.status(500).json({ error: 'Failed to fetch users on leave today' });
+  }
+};
+
+const fetchTeamLeave = async (req, res) => {
+  try {
+    const { teamMembers, month, year } = req.query;
+    
+    if (!teamMembers || !month || !year) {
+      return res.status(400).json({ error: 'Missing teamMembers, month, or year' });
+    }
+
+    const userIdArray = teamMembers.split(',').map(id => parseInt(id.trim()));
+
+    const leaveRequests = await getTeamLeave(userIdArray, month, year);
+    
+    res.json({ leaveRequests });
+  } catch (error) {
+    console.error('Error fetching team leave requests:', error);
+    res.status(500).json({ error: 'Failed to fetch leave requests' });
   }
 };
 
@@ -180,6 +200,7 @@ const deleteLeaveHandler = async (req, res) => {
 
 module.exports = {
   fetchUsersOnLeaveToday,
+  fetchTeamLeave,
   fetchLeaveBalance,
   fetchLeaveTypes,
   requestLeaveHandler,

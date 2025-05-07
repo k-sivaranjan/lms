@@ -1,35 +1,22 @@
-const { Repository } = require('typeorm');
-const { User } = require('../entities/User');
 const { AppDataSource } = require('../config/db');
+const { User } = require('../entities/User');
 
-class UserRepository {  // Correct class definition
-  constructor() {
-    this.repository = AppDataSource.getRepository(User);
-  }
+const userRepo = AppDataSource.getRepository(User);
 
-  async getAllUsers() {
-    return this.repository.find();
-  }
+const getAllUsers = async () => userRepo.find();
 
-  async createUser(name, email, password, role, managerId = null) {
-    const user = this.repository.create({
-      name,
-      email,
-      password,
-      role,
-      managerId
-    });
-    
-    return this.repository.save(user);
-  }
+const createUser = async (name, email, password, role, managerId = null) => {
+  const user = userRepo.create({ name, email, password, role, managerId });
+  return userRepo.save(user);
+};
 
-  async getUserByEmail(email) {
-    return this.repository.findOne({ where: { email } });
-  }
+const getUserByEmail = async (email) => userRepo.findOne({ where: { email } });
 
-  async getUserById(id) {
-    return this.repository.findOne({ where: { id } });
-  }
-}
+const getUserById = async (id) => userRepo.findOne({ where: { id } });
 
-module.exports = UserRepository; 
+module.exports = {
+  getAllUsers,
+  createUser,
+  getUserByEmail,
+  getUserById,
+};

@@ -1,16 +1,20 @@
-const LeaveRequestRepository = require('../repositories/LeaveRequestRepository');
-const LeaveBalanceRepository = require('../repositories/LeaveBalanceRepository');
-const LeaveTypeRepository = require('../repositories/LeaveTypeRepository');
-const UserRepository = require('../repositories/UserRepository');
+const { AppDataSource } = require('../config/db');
 const { LeaveStatus, HalfDayType } = require('../entities/LeaveRequest');
+const { LeaveType } = require('../entities/LeaveType');
+const { LeaveBalance } = require('../entities/LeaveBalance');
 
-const leaveRequestRepository = new LeaveRequestRepository();
-const leaveBalanceRepository = new LeaveBalanceRepository();
-const leaveTypeRepository = new LeaveTypeRepository();
-const userRepository = new UserRepository();
+
+const leaveTypeRepository = require('../repositories/LeaveTypeRepository');
+const leaveRequestRepository = require('../repositories/LeaveRequestRepository');
+const leaveBalanceRepository = require('../repositories/LeaveBalanceRepository');
+const userRepository = require('../repositories/UserRepository');
 
 const getUsersOnLeaveToday = async () => {
   return leaveRequestRepository.getUsersOnLeaveToday();
+};
+
+const getTeamLeave = async (userIdArray, month, year) => {
+  return await leaveRequestRepository.getTeamLeave(userIdArray, month, year);
 };
 
 const getLeaveBalance = async (userId, year) => {
@@ -33,7 +37,9 @@ const requestLeave = async (
   const start = new Date(startDate);
   const end = new Date(endDate);
 
-  const leaveDays = isHalfDay ? 0.5 : Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+  const totalDays = isHalfDay ? 0.5 : Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  console.log(`totaldays ${totalDays}`)
 
   const balances = await leaveBalanceRepository.getLeaveBalanceByUserAndYear(
     userId,
@@ -48,8 +54,10 @@ const requestLeave = async (
   const totalUsedLeave = leaveBalance.used;
   const maxLeaveDays = leaveBalance.balance + leaveBalance.used;
 
-  if (totalUsedLeave + leaveDays > maxLeaveDays) {
-    throw new Error(`You have exceeded the maximum allowed leave days for this leave type. Max allowed: ${maxLeaveDays} days.`);
+  if (leaveTypeId != 9 && leaveTypeId != 10) {
+    if (totalUsedLeave + totalDays > maxLeaveDays) {
+      throw new Error(`You have exceeded the maximum allowed leave days for this leave type. Max allowed: ${maxLeaveDays} days.`);
+    }
   }
 
   const leaveType = await leaveTypeRepository.getLeaveTypeById(leaveTypeId);
@@ -64,7 +72,7 @@ const requestLeave = async (
   const managerId = user.managerId;
 
   const maxApproverByRole = role === 'employee' ? 3 : role === 'manager' ? 2 : 1;
-  const finalApprovalLevel = leaveDays >= 5 ? maxApproverByRole : Math.min(multiApprover, maxApproverByRole);
+  const finalApprovalLevel = totalDays >= 5 ? maxApproverByRole : Math.min(multiApprover, maxApproverByRole);
 
   let level2ApproverId = null;
   if (managerId) {
@@ -78,7 +86,12 @@ const requestLeave = async (
     level3ApproverId = level2Manager?.managerId;
   }
 
-  const initialStatus = finalApprovalLevel > 1 ? LeaveStatus.PENDING_L1 : LeaveStatus.PENDING;
+  let initialStatus;
+  if (leaveTypeId ===9){
+    initialStatus = "Approved"
+  }else{
+    initialStatus = finalApprovalLevel > 1 ? LeaveStatus.PENDING_L1 : LeaveStatus.PENDING;
+  }
 
   const leaveRequest = await leaveRequestRepository.createLeaveRequest(
     userId,
@@ -90,7 +103,7 @@ const requestLeave = async (
     reason,
     initialStatus,
     finalApprovalLevel,
-    leaveDays
+    totalDays
   );
 
   return leaveRequest;
@@ -106,19 +119,23 @@ const cancelLeave = async (leaveRequestId) => {
   if (!leaveRequest) {
     throw new Error('Leave request not found');
   }
-
   const { status, userId, leaveTypeId, startDate, totalDays } = leaveRequest;
+  console.log(status, userId, leaveTypeId, startDate, totalDays)
 
   await leaveRequestRepository.updateLeaveRequestStatus(leaveRequestId, LeaveStatus.CANCELLED);
 
   if (status === LeaveStatus.APPROVED) {
     const leaveTypesOnlyUsed = [9, 10];
 
+    const startDateObj = startDate instanceof Date ? startDate : new Date(startDate);
+    const year = startDateObj.getFullYear();
+    console.log(`totaldays ${totalDays}`)
+
     if (leaveTypesOnlyUsed.includes(leaveTypeId)) {
       await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
         userId,
         leaveTypeId,
-        startDate.getFullYear(),
+        year,
         0,
         -totalDays
       );
@@ -126,7 +143,7 @@ const cancelLeave = async (leaveRequestId) => {
       await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
         userId,
         leaveTypeId,
-        startDate.getFullYear(),
+        year,
         totalDays,
         -totalDays
       );
@@ -135,7 +152,6 @@ const cancelLeave = async (leaveRequestId) => {
 
   return { success: true, message: 'Leave request cancelled successfully' };
 };
-
 
 const getIncomingRequests = async (userId) => {
   const user = await userRepository.getUserById(userId);
@@ -152,19 +168,15 @@ const approveLeave = async (requestId) => {
     throw new Error('Leave request not found');
   }
 
-  const { userId, leaveTypeId, status, totalDays, finalApprovalLevel } = leaveRequest;
+  const { userId, leaveTypeId, status, totalDays, finalApprovalLevel, startDate } = leaveRequest;
 
   if (totalDays === null) {
     throw new Error('Total days not calculated');
   }
 
-  let leaveDays = totalDays;
-
-  const startDate = new Date(leaveRequest.startDate);
-      if (isNaN(startDate.getTime())) {
-        throw new Error('Invalid start date');
-      }
-      const year = startDate.getFullYear();
+  const leaveDays = totalDays;
+  const startDateObj = startDate instanceof Date ? startDate : new Date(startDate);
+  const year = startDateObj.getFullYear();
 
   if (status === LeaveStatus.PENDING) {
     await leaveRequestRepository.updateLeaveRequestStatus(requestId, LeaveStatus.APPROVED);
@@ -173,7 +185,7 @@ const approveLeave = async (requestId) => {
       await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
         userId,
         leaveTypeId,
-        leaveRequest.year,
+        year,
         0,
         leaveDays
       );
@@ -181,7 +193,7 @@ const approveLeave = async (requestId) => {
       await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
         userId,
         leaveTypeId,
-        leaveRequest.year,
+        year,
         -leaveDays,
         leaveDays
       );
@@ -198,26 +210,46 @@ const approveLeave = async (requestId) => {
     } else {
       await leaveRequestRepository.updateLeaveRequestStatus(requestId, LeaveStatus.APPROVED);
 
-      await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
-        userId,
-        leaveTypeId,
-        leaveRequest.year,
-        -leaveDays,
-        leaveDays
-      );
+      if (leaveTypeId === 9 || leaveTypeId === 10) {
+        await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
+          userId,
+          leaveTypeId,
+          year,
+          0,
+          leaveDays
+        );
+      } else {
+        await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
+          userId,
+          leaveTypeId,
+          year,
+          -leaveDays,
+          leaveDays
+        );
+      }
 
       return { nextStep: 'Approved' };
     }
   } else if (status === LeaveStatus.PENDING_L3) {
     await leaveRequestRepository.updateLeaveRequestStatus(requestId, LeaveStatus.APPROVED);
 
-    await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
-      userId,
-      leaveTypeId,
-      leaveRequest.year,
-      -leaveDays,
-      leaveDays
-    );
+    if (leaveTypeId === 9 || leaveTypeId === 10) {
+      await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
+        userId,
+        leaveTypeId,
+        year,
+        0,
+        leaveDays
+      );
+    } else {
+      await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
+        userId,
+        leaveTypeId,
+        year,
+        -leaveDays,
+        leaveDays
+      );
+    }
 
     return { nextStep: 'Approved' };
   }
@@ -250,6 +282,7 @@ const deleteLeaveType = async (id) => {
 
 module.exports = {
   getUsersOnLeaveToday,
+  getTeamLeave,
   getLeaveBalance,
   getLeaveTypes,
   requestLeave,

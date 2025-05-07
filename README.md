@@ -15,36 +15,39 @@ A Leave Management System built with **React**, **Node.js**, **Express**, and **
 
 ### 👤 User Management
 - `GET /users` - Fetch all users
-- `POST /add-user` - Add a new user
+- `POST /register` - Add a new user
+- `POST /login` - Login as a user
 
 ### 📅 Leave Requests
-- `POST /request` - Submit a leave request
-- `PUT /cancel/:leaveRequestId` - Cancel a leave request
-- `GET /history/:userId` - Get leave history of a user
+- `POST /api/leave/request` - Submit a leave request
+- `PUT /api/leave/cancel/:leaveRequestId` - Cancel a leave request
+- `GET /api/leave/history/:userId` - Get leave history of a user
 
 ### 📊 Leave Balance
-- `GET /balance/:userId` - Get current leave balance for a user
+- `GET /api/leave/balance/:userId` - Get current leave balance for a user
 
 ### ✅ Leave Approvals
-- `GET /requests/:userId` - Get incoming leave requests (for manager/HR/Admin)
-- `PUT /approve/:approveId` - Approve a leave request
-- `PUT /reject/:rejectId` - Reject a leave request
+- `GET /api/leave/requests/:userId` - Get incoming leave requests (for manager/HR/Admin)
+- `PUT /api/leave/approve/:approveId` - Approve a leave request
+- `PUT /api/leave/reject/:rejectId` - Reject a leave request
 
 ### 📌 Leave Types & Policy Management (Admin)
-- `GET /types` - Fetch all leave types
-- `POST /types` - Create a new leave type
-- `PUT /types/:id` - Update an existing leave type
-- `DELETE /types/:id` - Delete a leave type
+- `GET /api/leave/types` - Fetch all leave types
+- `POST /api/leave/types` - Create a new leave type
+- `PUT /api/leave/types/:id` - Update an existing leave type
+- `DELETE /api/leave/types/:id` - Delete a leave type
 
 ### 📍 Attendance Tracking
-- `GET /on-leave-today` - Fetch users who are on leave today
+- `GET /api/leave/on-leave-today` - Fetch users who are on leave today
 
----
+### 👥 Team View
+- `GET /api/leave/team-leaves` - Fetch leave status of your team
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: React JS
 - **Backend**: Node.js + Express.js
 - **Database**: MySQL
+- **ORM**: TypeORM
 
 ---

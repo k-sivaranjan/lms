@@ -69,8 +69,6 @@
 .view-button:hover {
   background-color: #2980b9;
 }
-
-/* Modal styles */
 .modal-overlay {
   position: fixed;
   top: 0;

@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useUser } from '../userContext';
-import LeaveHistory from '../components/LeaveHistory';
 import Admin from './Admin';
+import LeaveHistory from '../components/LeaveHistory';
+import Calendar from '../components/Calendar';
 import {
   PieChart, Pie, Cell, Tooltip as RechartsTooltip,
   BarChart, Bar, XAxis, YAxis, Legend, ResponsiveContainer
@@ -15,6 +16,7 @@ const COLORS = ['#0088FE', '#FF8042'];
 function Home() {
   const { user, logout } = useUser();
   const navigate = useNavigate();
+  const [teamMembers, setTeamMembers] = useState([]);
   const [leaveHistory, setLeaveHistory] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [leaveBalance, setLeaveBalance] = useState(0);
@@ -32,6 +34,7 @@ function Home() {
     navigate('/login');
   };
 
+  // leave history
   useEffect(() => {
     if (!user) return;
     const fetchHistory = async () => {
@@ -47,6 +50,7 @@ function Home() {
     fetchHistory();
   }, [user]);
 
+  //leave balance
   useEffect(() => {
     if (!user || user.role === "admin") return;
     const fetchBalance = async () => {
@@ -64,6 +68,7 @@ function Home() {
     fetchBalance();
   }, [user]);
 
+  // Incoming Leave Requests  
   useEffect(() => {
     if (!user || user.role === "employee") return;
     const fetchIncomingRequests = async () => {
@@ -78,6 +83,44 @@ function Home() {
     };
     fetchIncomingRequests();
   }, [user]);
+ 
+  //Team Members
+  useEffect(() => {
+    const fetchAllUsers = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/auth/users');
+    
+        const currentManagerId = user.managerId;
+    
+        const teamMembers = res.data.users.filter(user => user.managerId === currentManagerId);
+        setTeamMembers(teamMembers);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+  
+    if (user) {
+      fetchAllUsers();
+    }
+  }, [user]);
+
+  // Team leave Details
+  const fetchTeamLeaveData = async (teamMemberIds, month, year) => {
+    try {
+      console.log(`Fetching team leave data for ids ${teamMemberIds} for month ${month}, year ${year}`)
+      const response = await axios.get('http://localhost:5000/api/leave/team-leaves', {
+        params: { 
+          teamMembers: teamMemberIds.join(','),
+          month: month,
+          year: year
+        }
+      });
+      return response.data.leaveRequests;
+    } catch (error) {
+      console.error("Error fetching team leave data:", error);
+      return [];
+    }
+  };
 
   const handleRequestLeave = () => navigate('/request-leave');
 
@@ -112,8 +155,12 @@ function Home() {
   return (
     <div className="employee-home">
       <div className="home-header">
-        <h2 className="welcome-message">Welcome, {user.name}</h2>
-        <button onClick={handleLogout} className="logout-button">Logout</button>
+        <h2 className="welcome-message">
+          Welcome <span>{user.name}</span>!
+        </h2>
+        <button onClick={handleLogout} className="logout-button">
+          Logout
+        </button>
       </div>
 
       <div className="leave-balance">
@@ -192,11 +239,18 @@ function Home() {
           </div>
         </div>
       )}
+      <div className='team-calendar'>
+          {/* New TeamCalendar component */}
+          <Calendar 
+            teamMembers={teamMembers} 
+            fetchTeamLeaveData={fetchTeamLeaveData} 
+          />
+      </div>
 
       <div className="leave-history">
         {loading.history ? <p>Loading leave history...</p> :
           error.history ? <p>{error.history}</p> :
-            <LeaveHistory leaveHistory={leaveHistory}/>
+            <LeaveHistory leaveHistory={leaveHistory} />
         }
       </div>
     </div>

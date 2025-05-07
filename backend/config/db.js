@@ -15,7 +15,7 @@ const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   synchronize: false,
-  logging: process.env.NODE_ENV === 'development',
+  logging: false, 
   entities: [User, LeaveType, LeaveBalance, LeaveRequest],
   migrations: ['src/migrations/**/*.ts'],
 });

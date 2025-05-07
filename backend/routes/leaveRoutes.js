@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
+
 const {
   fetchUsersOnLeaveToday,
+  fetchTeamLeave,
   fetchLeaveBalance,
   fetchLeaveTypes,
   requestLeaveHandler,
@@ -15,22 +17,31 @@ const {
   deleteLeaveHandler
 } = require('../controllers/leaveController');
 
-// Leave status routes
-router.get('/users-on-leave', fetchUsersOnLeaveToday);
-router.get('/balance/:userId', fetchLeaveBalance);
-router.get('/types', fetchLeaveTypes);
+const { authMiddleware, roleMiddleware } = require('../middleware/middleware');
 
-// Leave request routes
-router.post('/request', requestLeaveHandler);
-router.get('/history/:userId', getLeaveHistoryHandler);
-router.put('/cancel/:leaveRequestId', cancelLeaveHandler);
-router.get('/requests/:userId', getIncomingRequestsHandler);
-router.put('/approve/:approveId', approveLeaveHandler);
-router.put('/reject/:rejectId', rejectLeaveHandler);
+//Leave Requests
+router.post('/request', authMiddleware, requestLeaveHandler);
+router.put('/cancel/:leaveRequestId', authMiddleware, cancelLeaveHandler);
+router.get('/history/:userId', authMiddleware, getLeaveHistoryHandler);
 
-// Leave type management routes
-router.post('/create-leave', createLeaveHandler);
-router.put('/type/:id', updateLeaveHandler);
-router.delete('/type/:id', deleteLeaveHandler);
+//Leave Balance 
+router.get('/balance/:userId', authMiddleware, fetchLeaveBalance);
+
+//Leave Approvals
+router.get('/requests/:userId', authMiddleware, getIncomingRequestsHandler);
+router.put('/approve/:approveId', authMiddleware, approveLeaveHandler);
+router.put('/reject/:rejectId', authMiddleware, rejectLeaveHandler);
+
+//Leave Types & Policy Management (Admin)
+router.get('/types', authMiddleware, fetchLeaveTypes);
+router.post('/types', authMiddleware, roleMiddleware('admin'), createLeaveHandler);
+router.put('/types/:id', authMiddleware, roleMiddleware('admin'), updateLeaveHandler);
+router.delete('/types/:id', authMiddleware, roleMiddleware('admin'), deleteLeaveHandler);
+
+//Attendance Tracking
+router.get('/on-leave-today', authMiddleware, roleMiddleware('admin'), fetchUsersOnLeaveToday);
+
+//Team Leave View
+router.get('/team-leaves', authMiddleware, fetchTeamLeave);
 
 module.exports = router;

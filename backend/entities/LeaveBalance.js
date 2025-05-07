@@ -21,10 +21,10 @@ const LeaveBalance = new EntitySchema({
       type: Number,
     },
     balance: {
-      type: "float",  // Match MySQL type: float
+      type: "float", 
     },
     used: {
-      type: "float",  // Match MySQL type: float
+      type: "float",
     },
   },
   relations: {
