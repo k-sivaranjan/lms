@@ -111,7 +111,6 @@ function Home() {
     }
   };
 
-  //
   const handleRequestLeave = () => navigate('/request-leave');
 
   // Approve or Reject a leave request

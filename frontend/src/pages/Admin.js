@@ -38,7 +38,11 @@ function Admin({ user, logout }) {
   //Fetching the incoming requests for approval
   const fetchAdminRequests = async () => {
     const res = await axios.get(`http://localhost:5000/api/leave/requests/${user.id}`);
-    setAdminRequests(res.data.incomingRequests);
+    if (!res.data) {
+      setAdminRequests([]);
+    } else {
+      setAdminRequests(res.data.incomingRequests);
+    }
   };
 
   //Fetching all users who are currently on leave today
@@ -56,8 +60,13 @@ function Admin({ user, logout }) {
   //Fetching all users
   const fetchAllUsers = async () => {
     const res = await axios.get('http://localhost:5000/api/auth/users');
-    setAllUsers(res.data.users);
-    setTotalUsers(res.data.count);
+    if (!res.data) {
+      setAllUsers([]);
+      setTotalUsers(0);
+    } else {
+      setAllUsers(res.data.users);
+      setTotalUsers(res.data.count);
+    }
   };
 
   //Handle approve or reject of leave requests
