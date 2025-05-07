@@ -31,7 +31,7 @@ function LeavePolicy() {
   // Handle updates of leave type
   const handleUpdate = async (id, updatedLeave) => {
     try {
-      await axios.put(`http://localhost:5000/api/leave/type/${id}`, updatedLeave);
+      await axios.put(`http://localhost:5000/api/leave/types/${id}`, updatedLeave);
       alert('Leave policy updated');
       fetchLeaveTypes();
     } catch {
@@ -41,7 +41,7 @@ function LeavePolicy() {
 // Handle deletion of a leave type
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/leave/type/${id}`);
+      await axios.delete(`http://localhost:5000/api/leave/types/${id}`);
       fetchLeaveTypes();
     } catch {
       alert('Failed to delete leave type');
@@ -51,7 +51,7 @@ function LeavePolicy() {
   // Handle addition of a new leave type
   const handleAdd = async () => {
     try {
-      await axios.post('http://localhost:5000/api/leave/create-leave', newLeave);
+      await axios.post('http://localhost:5000/api/leave/types', newLeave);
       setNewLeave({ name: '', maxPerYear: 0, multiApprover: 1 });
       fetchLeaveTypes();
     } catch {
