@@ -61,8 +61,8 @@ function LeavePolicy() {
 
   return (
     <div className="leave-policy-container">
-      <h3 className="leave-policy-title">Leave Policy</h3>
-      <div className="leave-types-grid">
+      <h3>Leave Policy</h3>
+      <div className="leave-types-grid leaves-section">
         {leaveTypes.map((lt, index) => (
           <div key={lt.id} className="leave-card">
             <div className="leave-card-header">

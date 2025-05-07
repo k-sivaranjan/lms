@@ -39,6 +39,9 @@ const Calendar = ({ teamMembers, fetchTeamLeaveData }) => {
           selectedMonth + 1,
           selectedYear
         );
+
+        console.log(data);
+        
         setTeamLeaveData(data || []);
       } catch (error) {
         console.error("Error fetching team leave data:", error);
@@ -147,7 +150,6 @@ const Calendar = ({ teamMembers, fetchTeamLeaveData }) => {
   const renderLegend = () => {
     return (
       <div className="calendar-legend">
-        <h4>Leave Types</h4>
         <div className="legend-items">
           {Object.entries(leaveTypeColors).map(([type, color]) => (
             <div key={type} className="legend-item">
@@ -183,7 +185,7 @@ const Calendar = ({ teamMembers, fetchTeamLeaveData }) => {
                   {renderCalendarHeader()}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className='t-body'>
                 {renderCalendarBody()}
               </tbody>
             </table>

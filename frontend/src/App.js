@@ -7,7 +7,7 @@ import RequestLeave from './components/RequestLeave';
 import AddUser from './components/AddUser';
 import axios from 'axios';
 
-// Check for the presence of a token in local storage and set it as an default Authorization header
+//Check for token in local storage and set it to the axios header
 function App() {
   useEffect(() => {
     const token = localStorage.getItem('token');

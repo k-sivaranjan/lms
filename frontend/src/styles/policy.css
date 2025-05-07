@@ -1,9 +1,9 @@
 .leave-policy-container {
-  margin-top: 2rem;
   padding: 1.5rem;
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
+  height:700px;
 }
 
 .leave-policy-title {
@@ -17,7 +17,15 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1rem;
-  margin-bottom: 2.5rem;
+}
+
+.leaves-section{
+  max-height:580px;
+  padding:10px;
+  overflow: auto;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
 }
 
 .leave-card {

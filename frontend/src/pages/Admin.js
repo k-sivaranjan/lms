@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import axios from 'axios';
 import LeavePolicy from '../components/LeavePolicy';
+import Calendar from '../components/Calendar';
 import '../styles/admin.css';
 
-function Admin({ user, logout }) {
+function Admin({ user, logout, teamMembers, fetchTeamLeaveData }) {
   const navigate = useNavigate();
 
   const [adminRequests, setAdminRequests] = useState([]);
@@ -38,6 +39,8 @@ function Admin({ user, logout }) {
   //Fetching the incoming requests for approval
   const fetchAdminRequests = async () => {
     const res = await axios.get(`http://localhost:5000/api/leave/requests/${user.id}`);
+    console.log("response", res);
+
     if (!res.data) {
       setAdminRequests([]);
     } else {
@@ -60,13 +63,8 @@ function Admin({ user, logout }) {
   //Fetching all users
   const fetchAllUsers = async () => {
     const res = await axios.get('http://localhost:5000/api/auth/users');
-    if (!res.data) {
-      setAllUsers([]);
-      setTotalUsers(0);
-    } else {
-      setAllUsers(res.data.users);
-      setTotalUsers(res.data.count);
-    }
+    setAllUsers(res.data.users);
+    setTotalUsers(res.data.count);
   };
 
   //Handle approve or reject of leave requests
@@ -90,11 +88,10 @@ function Admin({ user, logout }) {
 
   return (
     <div className="admin-dashboard">
-      <div className="admin-header">
+      <div className="home-header">
         <h2>Welcome, Admin</h2>
         <button onClick={handleLogout} className="logout-button">Logout</button>
       </div>
-
       <button className="add-user-btn" onClick={onAddUser}>Add User</button>
       <section className="leave-summary-row">
         <div className="users-on-leave">
@@ -175,9 +172,19 @@ function Admin({ user, logout }) {
         </section>
       )}
 
-      <section className="all-users">
+      {teamMembers.length > 0 && (
+        <div className='team-calendar'>
+          <Calendar
+            teamMembers={teamMembers}
+            fetchTeamLeaveData={fetchTeamLeaveData}
+          />
+        </div>
+      )}
+
+      <section className="section-container">
         <h3>All Users</h3>
-        <table>
+        <div className='section'>
+          <table>
           <thead>
             <tr>
               <th>ID</th>
@@ -200,9 +207,10 @@ function Admin({ user, logout }) {
             })}
           </tbody>
         </table>
+        </div>
       </section>
 
-      <section className='leave-policy'>
+      <section className='leaves'>
         <LeavePolicy />
       </section>
     </div>

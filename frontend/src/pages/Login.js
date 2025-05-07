@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../userContext';
+import { apiPostWithRetry } from '../utils/api';
 import axios from 'axios';
 import '../styles/login.css';
 
@@ -11,16 +12,14 @@ function Login() {
   const { login } = useUser();
   const navigate = useNavigate();
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', {
-        email,
-        password
-      });
+      const res = await apiPostWithRetry('http://localhost:5000/api/auth/login', { email, password });
+
       login(res.data.user);
       localStorage.setItem('token', res.data.token);
+      axios.defaults.headers['Authorization'] = `Bearer ${res.data.token}`;
       navigate('/');
     } catch (error) {
       if (error.response) {

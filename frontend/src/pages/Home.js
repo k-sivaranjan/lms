@@ -86,8 +86,13 @@ function Home() {
   const fetchAllUsersinTeam = async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/auth/users');
-      const currentManagerId = user.managerId;
-      const teamMembers = res.data.users.filter(u => u.managerId === currentManagerId);
+      const currentManagerId = user.id; // use logged-in user's ID
+      let teamMembers;
+      if (user.role !== 'admin'){
+        teamMembers = res.data.users.filter(u => u.managerId === currentManagerId);
+      }else{
+        teamMembers = res.data.users;
+      }
       setTeamMembers(teamMembers);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -101,7 +106,8 @@ function Home() {
         params: {
           teamMembers: teamMemberIds.join(','),
           month: month,
-          year: year
+          year: year,
+          role:user.role
         }
       });
       return response.data.leaveRequests;
@@ -111,6 +117,7 @@ function Home() {
     }
   };
 
+  //
   const handleRequestLeave = () => navigate('/request-leave');
 
   // Approve or Reject a leave request
@@ -124,12 +131,13 @@ function Home() {
     }
   };
 
-  // Format date function
-  const formatDate = (date) => new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-
   // Render admin component
   if (!user) return null;
-  if (user.role === "admin") return <Admin user={user} logout={logout} />;
+  if (user.role === "admin") return <Admin user={user} logout={logout} teamMembers={teamMembers} fetchTeamLeaveData={fetchTeamLeaveData} />;
+
+
+  // Format date function
+  const formatDate = (date) => new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
   const pieData = [
     { name: 'Used', value: leaveTotal - leaveBalance },
@@ -230,13 +238,15 @@ function Home() {
           </div>
         </div>
       )}
-      <div className='team-calendar'>
-        {/* New TeamCalendar component */}
-        <Calendar
-          teamMembers={teamMembers}
-          fetchTeamLeaveData={fetchTeamLeaveData}
-        />
-      </div>
+
+      {teamMembers.length > 0 && (
+        <div className='team-calendar'>
+          <Calendar
+            teamMembers={teamMembers}
+            fetchTeamLeaveData={fetchTeamLeaveData}
+          />
+        </div>
+      )}
 
       <div className="leave-history">
         {loading.history ? <p>Loading leave history...</p> :

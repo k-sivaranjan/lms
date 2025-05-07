@@ -28,8 +28,8 @@ const getUsersOnLeaveToday = async () => {
 };
 
 // Get team leave requests for a specific month and year
-const getTeamLeave = async (userIds, month, year) => {
-  return await leaveRequestRepo
+const getTeamLeave = async (userIds, month, year, role) => {
+  const query = leaveRequestRepo
     .createQueryBuilder('lr')
     .leftJoin('lr.leaveType', 'lt')
     .select([
@@ -42,11 +42,15 @@ const getTeamLeave = async (userIds, month, year) => {
       'lr.status',
       'lt.name AS leaveTypeName'
     ])
-    .where('lr.user_id IN (:...userIds)', { userIds })
     .andWhere('MONTH(lr.start_date) = :month', { month })
     .andWhere('YEAR(lr.start_date) = :year', { year })
-    .andWhere('lr.status = :status', { status: 'Approved' })
-    .getRawMany();
+    .andWhere('lr.status = :status', { status: 'Approved' });
+
+  if (role !== 'admin') {
+    query.andWhere('lr.user_id IN (:...userIds)', { userIds });
+  }
+
+  return await query.getRawMany();
 };
 
 // Get leave history by user ID
