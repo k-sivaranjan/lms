@@ -5,6 +5,7 @@ const { getAllUsers, createUser, getUser, getUserByEmail } = require ('../models
 dotenv.config();
 const SECRET_KEY = process.env.JWT_SECRET || 'default_secret_key';
 
+// Register a new user
 const register = async (req, res) => {
   try {
     const { name, email, password, role, reportingManagerId } = req.body;
@@ -22,6 +23,7 @@ const register = async (req, res) => {
   }
 };
 
+// Login an existing user
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -47,6 +49,7 @@ const login = async (req, res) => {
   }
 };
 
+// Fetch all users
 const fetchAllUsers = async (req, res) => {
   try {
     const users = await getAllUsers();

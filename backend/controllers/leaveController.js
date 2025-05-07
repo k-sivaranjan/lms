@@ -14,6 +14,7 @@ const {
   deleteLeaveType
 } = require('../models/leaveModel');
 
+// Fetch users who are on leave today
 const fetchUsersOnLeaveToday = async (req, res) => {
   try {
     const users = await getUsersOnLeaveToday();
@@ -27,6 +28,8 @@ const fetchUsersOnLeaveToday = async (req, res) => {
   }
 };
 
+
+// Fetch team members with their respective leave Details
 const fetchTeamLeave = async (req, res) => {
   try {
     const { teamMembers, month, year } = req.query;
@@ -46,6 +49,7 @@ const fetchTeamLeave = async (req, res) => {
   }
 };
 
+// Fetch user's leave balance
 const fetchLeaveBalance = async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
@@ -75,6 +79,8 @@ const fetchLeaveBalance = async (req, res) => {
   }
 };
 
+
+// Fetch all available leave types
 const fetchLeaveTypes = async (req, res) => {
   try {
     const leaveTypes = await getLeaveTypes();
@@ -88,6 +94,7 @@ const fetchLeaveTypes = async (req, res) => {
   }
 };
 
+// Request a leave
 const requestLeaveHandler = async (req, res) => {
   try {
     const { userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason } = req.body;
@@ -109,6 +116,7 @@ const requestLeaveHandler = async (req, res) => {
   }
 };
 
+// Get leave history
 const getLeaveHistoryHandler = async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
@@ -120,6 +128,7 @@ const getLeaveHistoryHandler = async (req, res) => {
   }
 };
 
+// Cancel a leave request
 const cancelLeaveHandler = async (req, res) => {
   try {
     const leaveRequestId = parseInt(req.params.leaveRequestId);
@@ -131,6 +140,7 @@ const cancelLeaveHandler = async (req, res) => {
   }
 };
 
+// Get incoming leave requests for approval
 const getIncomingRequestsHandler = async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
@@ -142,6 +152,7 @@ const getIncomingRequestsHandler = async (req, res) => {
   }
 };
 
+// Approve a leave request
 const approveLeaveHandler = async (req, res) => {
   try {
     const requestId = parseInt(req.params.approveId);
@@ -153,6 +164,7 @@ const approveLeaveHandler = async (req, res) => {
   }
 };
 
+// Reject a leave request
 const rejectLeaveHandler = async (req, res) => {
   try {
     const rejectId = parseInt(req.params.rejectId);
@@ -164,6 +176,7 @@ const rejectLeaveHandler = async (req, res) => {
   }
 };
 
+// Create a new leave type
 const createLeaveHandler = async (req, res) => {
   try {
     const { name, maxPerYear, multiApprover } = req.body;
@@ -175,6 +188,7 @@ const createLeaveHandler = async (req, res) => {
   }
 };
 
+// Update an existing leave type
 const updateLeaveHandler = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
@@ -187,6 +201,7 @@ const updateLeaveHandler = async (req, res) => {
   }
 };
 
+// Delete a leave type
 const deleteLeaveHandler = async (req, res) => {
   try {
     const id = parseInt(req.params.id);

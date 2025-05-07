@@ -3,6 +3,7 @@ const { LeaveRequest, LeaveStatus } = require('../entities/LeaveRequest');
 
 const leaveRequestRepo = AppDataSource.getRepository(LeaveRequest);
 
+// Get users on leave for the current day
 const getUsersOnLeaveToday = async () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -26,6 +27,7 @@ const getUsersOnLeaveToday = async () => {
   }));
 };
 
+// Get team leave requests for a specific month and year
 const getTeamLeave = async (userIds, month, year) => {
   return await leaveRequestRepo
     .createQueryBuilder('lr')
@@ -47,6 +49,7 @@ const getTeamLeave = async (userIds, month, year) => {
     .getRawMany();
 };
 
+// Get leave history by user ID
 const getLeaveHistoryByUserId = async (userId) => {
   const leaveRequests = await leaveRequestRepo.find({
     where: { userId },
@@ -65,6 +68,7 @@ const getLeaveHistoryByUserId = async (userId) => {
   }));
 };
 
+// Create a new leave request
 const createLeaveRequest = async (userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason, status, finalApprovalLevel, totalDays) => {
   const leaveRequest = leaveRequestRepo.create({
     userId,
@@ -81,8 +85,10 @@ const createLeaveRequest = async (userId, leaveTypeId, startDate, endDate, isHal
   return leaveRequestRepo.save(leaveRequest);
 };
 
+// Get leave request by ID
 const getLeaveRequestById = async (id) => leaveRequestRepo.findOne({ where: { id }, relations: ['user', 'leaveType'] });
 
+// Update leave request status
 const updateLeaveRequestStatus = async (id, status) => {
   const leaveRequest = await leaveRequestRepo.findOne({ where: { id } });
   if (!leaveRequest) return null;
@@ -90,6 +96,7 @@ const updateLeaveRequestStatus = async (id, status) => {
   return leaveRequestRepo.save(leaveRequest);
 };
 
+// Get incoming leave requests based on user role
 const getIncomingRequests = async (userId, userRole) => {
   let query = leaveRequestRepo.createQueryBuilder('lr')
     .leftJoinAndSelect('lr.user', 'u')

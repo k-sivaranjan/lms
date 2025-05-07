@@ -16,12 +16,14 @@ function LeaveRequest({ onRequestSuccess }) {
   const [halfDayType, setHalfDayType] = useState('');
   const [reason, setReason] = useState('');
 
+  // Fetch leave types when the component mounts
   useEffect(() => {
     axios.get('http://localhost:5000/api/leave/types')
       .then((res) => setLeaveTypes(res.data))
       .catch((err) => console.error('Error fetching leave types:', err));
   }, []);
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
   
@@ -75,6 +77,7 @@ function LeaveRequest({ onRequestSuccess }) {
     }
   };
 
+  // Calculate total leave days based on selected dates
   const getLeaveDays = () => {
     if (!startDate || !endDate) return 0;
     const start = new Date(startDate);

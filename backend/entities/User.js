@@ -7,63 +7,64 @@ const UserRole = {
   EMPLOYEE: 'employee',
 };
 
+//Schema for User entity
 const User = new EntitySchema({
-  name: "User", // Name of the entity
-  tableName: "users", // Name of the table in MySQL
+  name: "User",
+  tableName: "users",
   columns: {
     id: {
       type: Number,
       primary: true,
-      generated: true, // Auto increment in MySQL
+      generated: true, 
     },
     name: {
       type: String,
     },
     email: {
       type: String,
-      unique: true, // Ensures unique email field
+      unique: true,
     },
     password: {
       type: String,
     },
     role: {
       type: "enum",
-      enum: UserRole, // Enum values for user roles
-      default: UserRole.EMPLOYEE, // Default role is 'employee'
+      enum: UserRole, 
+      default: UserRole.EMPLOYEE,
     },
     managerId: {
-      name: "manager_id", // Column name in MySQL
+      name: "manager_id",
       type: Number,
-      nullable: true, // Can be null for employees without a manager
+      nullable: true, 
     },
     created_at: {
       type: "timestamp",
-      default: () => "CURRENT_TIMESTAMP", // Default value is current timestamp
+      default: () => "CURRENT_TIMESTAMP", 
     },
   },
   relations: {
     manager: {
-      type: "many-to-one", // A manager can have many employees
-      target: "User", // Target is another User entity
+      type: "many-to-one",
+      target: "User",
       joinColumn: {
-        name: "manager_id", // Join column in the User table
+        name: "manager_id",
       },
-      inverseSide: "directReports", // The inverse side of the relationship
+      inverseSide: "directReports",
     },
     directReports: {
-      type: "one-to-many", // A user can have multiple direct reports
-      target: "User", // Target is the same User entity
-      inverseSide: "manager", // Inverse side is the 'manager' field in the User entity
+      type: "one-to-many",
+      target: "User",
+      inverseSide: "manager",
     },
     leaveRequests: {
-      type: "one-to-many", // A user can have many leave requests
-      target: "LeaveRequest", // Target is LeaveRequest entity
-      inverseSide: "user", // Inverse side of the relationship
+      type: "one-to-many",
+      target: "LeaveRequest",
+      inverseSide: "user",
     },
     leaveBalances: {
-      type: "one-to-many", // A user can have multiple leave balances
-      target: "LeaveBalance", // Target is LeaveBalance entity
-      inverseSide: "user", // Inverse side of the relationship
+      type: "one-to-many",
+      target: "LeaveBalance",
+      inverseSide: "user",
     },
   },
 });

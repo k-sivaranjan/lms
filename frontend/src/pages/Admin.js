@@ -14,6 +14,8 @@ function Admin({ user, logout }) {
   const [leaveUsers, setLeaveUsers] = useState(0);
   const [allUsers, setAllUsers] = useState([]);
 
+
+  // Fetch admin requests and users on leave when the component mounts
   useEffect(() => {
     if (user) {
       fetchAdminRequests();
@@ -22,20 +24,24 @@ function Admin({ user, logout }) {
     }
   }, []);
 
+  // Logout function
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
+  // Function to add a new user
   const onAddUser = () => {
     navigate("/add-user");
   };
 
+  //Fetching the incoming requests for approval
   const fetchAdminRequests = async () => {
     const res = await axios.get(`http://localhost:5000/api/leave/requests/${user.id}`);
     setAdminRequests(res.data.incomingRequests);
   };
 
+  //Fetching all users who are currently on leave today
   const fetchUsersOnLeaveToday = async () => {
     const res = await axios.get('http://localhost:5000/api/leave/users-on-leave');
     if (!res.data) {
@@ -47,12 +53,14 @@ function Admin({ user, logout }) {
     }
   };
 
+  //Fetching all users
   const fetchAllUsers = async () => {
     const res = await axios.get('http://localhost:5000/api/auth/users');
     setAllUsers(res.data.users);
     setTotalUsers(res.data.count);
   };
 
+  //Handle approve or reject of leave requests
   const handleApproveReject = async (requestId, action) => {
     try {
       await axios.put(`http://localhost:5000/api/leave/${action}/${requestId}`);
@@ -65,6 +73,7 @@ function Admin({ user, logout }) {
     }
   };
 
+  //Format date
   const formatDate = (dateStr) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateStr).toLocaleDateString(undefined, options);

@@ -6,6 +6,7 @@ function LeaveHistory({ leaveHistory }) {
   const [selectedLeave, setSelectedLeave] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
+  // Function to handle cancellation of a leave request
   const handleCancel = async (leaveId) => {
     if (!window.confirm('Are you sure you want to cancel this leave?')) return;
 
@@ -19,11 +20,13 @@ function LeaveHistory({ leaveHistory }) {
     }
   };
 
+  // Helper function to format dates
   const formatDate = (isoString) => {
     const date = new Date(isoString);
     return `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()}`;
   };
 
+  // Helper function to format leave statuses
   const formatStatus = (status) => {
     const statusMap = {
       pending_level_1: 'Pending (L1)',
@@ -35,6 +38,7 @@ function LeaveHistory({ leaveHistory }) {
     return statusMap[status] || status;
   };
 
+  // Modal component for viewing leave details
   const openModal = (leave) => {
     setSelectedLeave(leave);
     setShowModal(true);
@@ -45,6 +49,7 @@ function LeaveHistory({ leaveHistory }) {
     setSelectedLeave(null);
   };
 
+  // Sort leave requests based on status and creation date
   const sortedHistory = [...leaveHistory].sort((a, b) => {
     const statusOrder = {
       pending_level_1: 0,

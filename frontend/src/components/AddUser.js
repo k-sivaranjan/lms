@@ -14,10 +14,12 @@ function AddUser() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  // Handle form input changes
   const handleChange = ({ target: { name, value } }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { name, email, password, role, reportingManagerId } = formData;

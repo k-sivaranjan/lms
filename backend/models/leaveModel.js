@@ -9,22 +9,27 @@ const leaveRequestRepository = require('../repositories/LeaveRequestRepository')
 const leaveBalanceRepository = require('../repositories/LeaveBalanceRepository');
 const userRepository = require('../repositories/UserRepository');
 
+// Get users on leave today
 const getUsersOnLeaveToday = async () => {
   return leaveRequestRepository.getUsersOnLeaveToday();
 };
 
+// Get team leave data
 const getTeamLeave = async (userIdArray, month, year) => {
   return await leaveRequestRepository.getTeamLeave(userIdArray, month, year);
 };
 
+// Get leave balance by user and year
 const getLeaveBalance = async (userId, year) => {
   return leaveBalanceRepository.getLeaveBalanceByUserAndYear(userId, year);
 };
 
+// Get all leave types
 const getLeaveTypes = async () => {
   return leaveTypeRepository.getAllLeaveTypes();
 };
 
+// Request a leave
 const requestLeave = async (
   userId,
   leaveTypeId,
@@ -109,10 +114,12 @@ const requestLeave = async (
   return leaveRequest;
 };
 
+// Get leave history of a specific user
 const getLeaveHistory = async (userId) => {
   return leaveRequestRepository.getLeaveHistoryByUserId(userId);
 };
 
+// Cancel a leave request
 const cancelLeave = async (leaveRequestId) => {
   const leaveRequest = await leaveRequestRepository.getLeaveRequestById(leaveRequestId);
 
@@ -153,6 +160,7 @@ const cancelLeave = async (leaveRequestId) => {
   return { success: true, message: 'Leave request cancelled successfully' };
 };
 
+// Get incoming requests for a specific user
 const getIncomingRequests = async (userId) => {
   const user = await userRepository.getUserById(userId);
   if (!user) {
@@ -162,6 +170,7 @@ const getIncomingRequests = async (userId) => {
   return leaveRequestRepository.getIncomingRequests(userId, user.role);
 };
 
+// Approve a leave request
 const approveLeave = async (requestId) => {
   const leaveRequest = await leaveRequestRepository.getLeaveRequestById(requestId);
   if (!leaveRequest) {
@@ -257,6 +266,7 @@ const approveLeave = async (requestId) => {
   return { message: 'Leave request already processed' };
 };
 
+// Reject a leave request
 const rejectLeave = async (requestId) => {
   const leaveRequest = await leaveRequestRepository.getLeaveRequestById(requestId);
   if (!leaveRequest) {
@@ -268,14 +278,17 @@ const rejectLeave = async (requestId) => {
   return { success: true, message: 'Leave request rejected successfully' };
 };
 
+// Add a new leave type
 const addLeaveType = async (name, maxPerYear, multiApprover = 1) => {
   return leaveTypeRepository.createLeaveType(name, maxPerYear, multiApprover);
 };
 
+// Update an existing leave type
 const updateLeaveType = async (id, name, maxPerYear, multiApprover = 1) => {
   return leaveTypeRepository.updateLeaveType(id, name, maxPerYear, multiApprover);
 };
 
+// Delete a leave type
 const deleteLeaveType = async (id) => {
   return leaveTypeRepository.deleteLeaveType(id);
 };

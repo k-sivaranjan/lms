@@ -7,6 +7,7 @@ const { LeaveRequest } = require('../entities/LeaveRequest') ;
 
 dotenv.config();
 
+// Create a TypeORM data source instance
 const AppDataSource = new DataSource({
   type: 'mysql',
   host: process.env.DB_HOST,
@@ -20,6 +21,7 @@ const AppDataSource = new DataSource({
   migrations: ['src/migrations/**/*.ts'],
 });
 
+// Initialize the database connection
 const initializeDatabase = async () => {
   try {
     await AppDataSource.initialize();

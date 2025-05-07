@@ -25,91 +25,77 @@ function Home() {
   const [loading, setLoading] = useState({ history: true, balance: true, incoming: true });
   const [error, setError] = useState({ history: null, balance: null, incoming: null });
 
+  // Fetching user details when the component mounts
   useEffect(() => {
-    if (!user) navigate('/login');
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    fetchLeaveHistory();
+    fetchBalance();
+    fetchIncomingRequests();
+    fetchAllUsersinTeam();
+
   }, [user, navigate]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  //Fetching the leave history of an employee
+  const fetchLeaveHistory = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/leave/history/${user.id}`);
+      setLeaveHistory(res.data.leaveHistory);
+    } catch {
+      setError(prev => ({ ...prev, history: 'Error fetching leave history' }));
+    } finally {
+      setLoading(prev => ({ ...prev, history: false }));
+    }
   };
 
-  // leave history
-  useEffect(() => {
-    if (!user) return;
-    const fetchHistory = async () => {
-      try {
-        const res = await axios.get(`http://localhost:5000/api/leave/history/${user.id}`);
-        setLeaveHistory(res.data.leaveHistory);
-      } catch {
-        setError(prev => ({ ...prev, history: 'Error fetching leave history' }));
-      } finally {
-        setLoading(prev => ({ ...prev, history: false }));
-      }
-    };
-    fetchHistory();
-  }, [user]);
-
-  //leave balance
-  useEffect(() => {
+  //Fetching the leave balance of an employee
+  const fetchBalance = async () => {
     if (!user || user.role === "admin") return;
-    const fetchBalance = async () => {
-      try {
-        const res = await axios.get(`http://localhost:5000/api/leave/balance/${user.id}`);
-        setLeaveTotal(res.data.totalLeaves);
-        setLeaveBalance(res.data.totalBalance);
-        setLeaveDetails(res.data.leaveDetails);
-      } catch {
-        setError(prev => ({ ...prev, balance: 'Error fetching leave balance' }));
-      } finally {
-        setLoading(prev => ({ ...prev, balance: false }));
-      }
-    };
-    fetchBalance();
-  }, [user]);
-
-  // Incoming Leave Requests  
-  useEffect(() => {
-    if (!user || user.role === "employee") return;
-    const fetchIncomingRequests = async () => {
-      try {
-        const res = await axios.get(`http://localhost:5000/api/leave/requests/${user.id}`);
-        setIncomingRequests(res.data.incomingRequests);
-      } catch {
-        setError(prev => ({ ...prev, incoming: 'Error fetching incoming requests' }));
-      } finally {
-        setLoading(prev => ({ ...prev, incoming: false }));
-      }
-    };
-    fetchIncomingRequests();
-  }, [user]);
- 
-  //Team Members
-  useEffect(() => {
-    const fetchAllUsers = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/api/auth/users');
-    
-        const currentManagerId = user.managerId;
-    
-        const teamMembers = res.data.users.filter(user => user.managerId === currentManagerId);
-        setTeamMembers(teamMembers);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
-  
-    if (user) {
-      fetchAllUsers();
+    try {
+      const res = await axios.get(`http://localhost:5000/api/leave/balance/${user.id}`);
+      setLeaveTotal(res.data.totalLeaves);
+      setLeaveBalance(res.data.totalBalance);
+      setLeaveDetails(res.data.leaveDetails);
+    } catch {
+      setError(prev => ({ ...prev, balance: 'Error fetching leave balance' }));
+    } finally {
+      setLoading(prev => ({ ...prev, balance: false }));
     }
-  }, [user]);
+  };
 
-  // Team leave Details
+  //Fetching the incoming requests for approval
+  const fetchIncomingRequests = async () => {
+    if (!user || user.role === "employee") return;
+    try {
+      const res = await axios.get(`http://localhost:5000/api/leave/requests/${user.id}`);
+      setIncomingRequests(res.data.incomingRequests);
+    } catch {
+      setError(prev => ({ ...prev, incoming: 'Error fetching incoming requests' }));
+    } finally {
+      setLoading(prev => ({ ...prev, incoming: false }));
+    }
+  };
+
+  //Fetching all users in the same team
+  const fetchAllUsersinTeam = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/auth/users');
+      const currentManagerId = user.managerId;
+      const teamMembers = res.data.users.filter(u => u.managerId === currentManagerId);
+      setTeamMembers(teamMembers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  // Fetch team leave data based on selected month and year
   const fetchTeamLeaveData = async (teamMemberIds, month, year) => {
     try {
       console.log(`Fetching team leave data for ids ${teamMemberIds} for month ${month}, year ${year}`)
       const response = await axios.get('http://localhost:5000/api/leave/team-leaves', {
-        params: { 
+        params: {
           teamMembers: teamMemberIds.join(','),
           month: month,
           year: year
@@ -122,8 +108,10 @@ function Home() {
     }
   };
 
+  //
   const handleRequestLeave = () => navigate('/request-leave');
 
+  // Approve or Reject a leave request
   const handleApproveReject = async (requestId, action) => {
     try {
       console.log(requestId)
@@ -135,8 +123,10 @@ function Home() {
     }
   };
 
+  // Format date function
   const formatDate = (date) => new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
+  // Render admin component
   if (!user) return null;
   if (user.role === "admin") return <Admin user={user} logout={logout} />;
 
@@ -240,11 +230,11 @@ function Home() {
         </div>
       )}
       <div className='team-calendar'>
-          {/* New TeamCalendar component */}
-          <Calendar 
-            teamMembers={teamMembers} 
-            fetchTeamLeaveData={fetchTeamLeaveData} 
-          />
+        {/* New TeamCalendar component */}
+        <Calendar
+          teamMembers={teamMembers}
+          fetchTeamLeaveData={fetchTeamLeaveData}
+        />
       </div>
 
       <div className="leave-history">

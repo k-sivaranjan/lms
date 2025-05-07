@@ -15,6 +15,7 @@ const HalfDayType = {
   SECOND_HALF: 'PM',
 };
 
+// Schema for the LeaveRequest entity
 const LeaveRequest = new EntitySchema({
   name: "LeaveRequest",
   tableName: "leave_requests",

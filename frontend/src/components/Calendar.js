@@ -7,14 +7,15 @@ const Calendar = ({ teamMembers, fetchTeamLeaveData }) => {
   const [teamLeaveData, setTeamLeaveData] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Define colors for different leave types
   const leaveTypeColors = {
-    'Casual Leave': '#4CAF50',     // Green
-    'Sick Leave': '#060270',       // Purple
-    'Paid Leave': '#2196F3',       // Blue
-    'Maternity Leave': '#9C27B0',  // Purple
-    'Paternity Leave': '#00BCD4',  // Cyan
-    'Emergency Leave': '#F44336',  // Deep Orange
-    'Loss of Pay': '#FF9800',      // Orange
+    'Casual Leave': '#4CAF50',
+    'Sick Leave': '#060270',
+    'Paid Leave': '#2196F3',
+    'Maternity Leave': '#9C27B0',
+    'Paternity Leave': '#00BCD4',
+    'Emergency Leave': '#F44336',
+    'Loss of Pay': '#FF9800',
   };  
 
   // Month names array
@@ -23,6 +24,7 @@ const Calendar = ({ teamMembers, fetchTeamLeaveData }) => {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
+  // Fetch team leave data when component mounts or props change
   useEffect(() => {
     const loadTeamLeaveData = async () => {
       if (!teamMembers || teamMembers.length === 0) {
@@ -48,10 +50,12 @@ const Calendar = ({ teamMembers, fetchTeamLeaveData }) => {
     loadTeamLeaveData();
   }, [selectedMonth, selectedYear, teamMembers, fetchTeamLeaveData]);
 
+  // Function to calculate number of days in a given month and year
   const getDaysInMonth = (month, year) => {
     return new Date(year, month + 1, 0).getDate();
   };
 
+  // Render calendar header with weekdays
   const renderCalendarHeader = () => {
     const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
     const dateHeaders = [];
@@ -73,12 +77,12 @@ const Calendar = ({ teamMembers, fetchTeamLeaveData }) => {
     return dateHeaders;
   };
 
+  // Render calendar body with dates and leave indicators
   const renderCalendarBody = () => {
     if (!teamMembers || teamMembers.length === 0) return null;
   
     return teamMembers.map(member => {
       const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
-      // Filter the team leave data for the current member
       const memberLeaves = teamLeaveData.filter(leave => leave.lr_user_id === member.id);
   
       const dayCells = [];
@@ -86,13 +90,10 @@ const Calendar = ({ teamMembers, fetchTeamLeaveData }) => {
         const currentDate = new Date(selectedYear, selectedMonth, day);
         const dayOfWeek = currentDate.getDay();
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-  
-        // Find any leave request that matches the current date
         const leaveOnThisDay = memberLeaves.find(leave => {
           const startDate = new Date(leave.lr_start_date);
           const endDate = new Date(leave.lr_end_date);
           
-          // Check if the current day is within the leave date range
           return currentDate >= startDate && currentDate <= endDate;
         });
   
@@ -123,7 +124,7 @@ const Calendar = ({ teamMembers, fetchTeamLeaveData }) => {
     });
   };
   
-
+  // Handle previous and next month navigation
   const handlePrevMonth = () => {
     if (selectedMonth === 0) {
       setSelectedMonth(11);
@@ -142,6 +143,7 @@ const Calendar = ({ teamMembers, fetchTeamLeaveData }) => {
     }
   };
 
+  // Render legend for leave types
   const renderLegend = () => {
     return (
       <div className="calendar-legend">

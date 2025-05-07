@@ -6,10 +6,12 @@ function LeavePolicy() {
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [newLeave, setNewLeave] = useState({ name: '', maxPerYear: 0, multiApprover: 1 });
 
+  // Fetch leave types when the component mounts
   useEffect(() => {
     fetchLeaveTypes();
   }, []);
 
+  // Function to fetch leave types from backend
   const fetchLeaveTypes = async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/leave/types');
@@ -19,12 +21,14 @@ function LeavePolicy() {
     }
   };
 
+  // Handle changes in input fields
   const handleChange = (index, field, value) => {
     const updated = [...leaveTypes];
     updated[index][field] = value;
     setLeaveTypes(updated);
   };
 
+  // Handle updates of leave type
   const handleUpdate = async (id, updatedLeave) => {
     try {
       await axios.put(`http://localhost:5000/api/leave/type/${id}`, updatedLeave);
@@ -34,7 +38,7 @@ function LeavePolicy() {
       alert('Failed to update leave policy');
     }
   };
-
+// Handle deletion of a leave type
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/leave/type/${id}`);
@@ -44,6 +48,7 @@ function LeavePolicy() {
     }
   };
 
+  // Handle addition of a new leave type
   const handleAdd = async () => {
     try {
       await axios.post('http://localhost:5000/api/leave/create-leave', newLeave);

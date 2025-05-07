@@ -1,5 +1,6 @@
 const { EntitySchema } = require("typeorm");
 
+// Schema for the LeaveBalance entity
 const LeaveBalance = new EntitySchema({
   name: "LeaveBalance",
   tableName: "leave_balances",
