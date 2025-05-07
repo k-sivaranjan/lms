@@ -24,7 +24,6 @@ function Login() {
       navigate('/');
     } catch (error) {
       if (error.response) {
-        console.log(error);
         setError(error.response.data.error || 'Login failed. Please try again.');
       } else {
         setError('Server error. Please try again.');

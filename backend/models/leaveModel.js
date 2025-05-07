@@ -44,7 +44,6 @@ const requestLeave = async (
 
 
   const totalDays = isHalfDay ? 0.5 : Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-  console.log(`totaldays ${totalDays}`)
 
   const balances = await leaveBalanceRepository.getLeaveBalanceByUserAndYear(
     userId,
@@ -127,7 +126,6 @@ const cancelLeave = async (leaveRequestId) => {
     throw new Error('Leave request not found');
   }
   const { status, userId, leaveTypeId, startDate, totalDays } = leaveRequest;
-  console.log(status, userId, leaveTypeId, startDate, totalDays)
 
   await leaveRequestRepository.updateLeaveRequestStatus(leaveRequestId, LeaveStatus.CANCELLED);
 
@@ -136,7 +134,6 @@ const cancelLeave = async (leaveRequestId) => {
 
     const startDateObj = startDate instanceof Date ? startDate : new Date(startDate);
     const year = startDateObj.getFullYear();
-    console.log(`totaldays ${totalDays}`)
 
     if (leaveTypesOnlyUsed.includes(leaveTypeId)) {
       await leaveBalanceRepository.updateLeaveBalanceByUserAndType(

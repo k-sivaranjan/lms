@@ -97,7 +97,6 @@ function Home() {
   // Fetch team leave data based on selected month and year
   const fetchTeamLeaveData = async (teamMemberIds, month, year) => {
     try {
-      console.log(`Fetching team leave data for ids ${teamMemberIds} for month ${month}, year ${year}`)
       const response = await axios.get('http://localhost:5000/api/leave/team-leaves', {
         params: {
           teamMembers: teamMemberIds.join(','),
@@ -118,7 +117,6 @@ function Home() {
   // Approve or Reject a leave request
   const handleApproveReject = async (requestId, action) => {
     try {
-      console.log(requestId)
       await axios.put(`http://localhost:5000/api/leave/${action}/${requestId}`);
       alert(`Request ${action}ed successfully`);
       setIncomingRequests(prev => prev.map(req => req.id === requestId ? { ...req, status: action } : req));

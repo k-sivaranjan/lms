@@ -1,6 +1,6 @@
 const jwt  = require('jsonwebtoken');
 const dotenv= require ('dotenv');
-const { getAllUsers, createUser, getUser, getUserByEmail } = require ('../models/userModel.js'); 
+const { getAllUsers, createUser, getUserByEmail } = require ('../models/userModel.js'); 
 
 dotenv.config();
 const SECRET_KEY = process.env.JWT_SECRET || 'default_secret_key';
@@ -28,7 +28,7 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await getUser(email);
+    const user = await getUserByEmail(email);
 
     if (!user || user.password !== password) {
       return res.status(400).json({ error: 'Invalid email or password' });
