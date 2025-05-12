@@ -111,9 +111,11 @@ const getIncomingRequests = async (userId, userRole) => {
     query = query
       .leftJoinAndSelect('mgr.manager', 'hr')
       .where('(lr.status = :pending AND u.role = :hrRole)', { pending: LeaveStatus.PENDING, hrRole: 'hr' })
-      .orWhere('(lr.status = :pendingL2 AND hr.managerId = :userId)', { pendingL2: LeaveStatus.PENDING_L2, userId })
-      .orWhere('(lr.status = :pendingL3 AND hr.managerId = :userId)', { pendingL3: LeaveStatus.PENDING_L3, userId });
-  } else if (userRole === 'hr') {
+      .orWhere('(lr.status = :pendingL3 AND hr.managerId = :userId)', { pendingL3: LeaveStatus.PENDING_L3, userId })
+      .orWhere('(lr.status = :pendingL2 AND mgr.managerId = :userId)', { pendingL2: LeaveStatus.PENDING_L2, userId });
+  }
+
+  else if (userRole === 'hr') {
     query = query
       .where('(lr.status = :pending AND u.managerId = :userId)', { pending: LeaveStatus.PENDING, userId })
       .orWhere('(lr.status = :pendingL1 AND u.managerId = :userId)', { pendingL1: LeaveStatus.PENDING_L1, userId })
