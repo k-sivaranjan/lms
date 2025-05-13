@@ -16,7 +16,6 @@ function Login() {
     e.preventDefault();
     try {
       const res = await apiPostWithRetry('http://localhost:5000/api/auth/login', { email, password });
-
       login(res.data.user);
       localStorage.setItem('token', res.data.token);
       axios.defaults.headers['Authorization'] = `Bearer ${res.data.token}`;

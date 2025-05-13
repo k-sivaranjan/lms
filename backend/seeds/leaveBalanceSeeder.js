@@ -132,7 +132,7 @@ async function seedLeaveBalances() {
 
         console.log('Leave Balance data seeded successfully!');
     } else {
-        console.log('Data already exist. Skipping Leave Balances seeding');
+        console.log('Data already exist. Skipping Leave Balances seeding...');
     }
 }
 

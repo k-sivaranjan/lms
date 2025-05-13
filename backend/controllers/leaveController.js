@@ -28,7 +28,6 @@ const fetchUsersOnLeaveToday = async (req, res) => {
   }
 };
 
-
 // Fetch team members with their respective leave Details
 const fetchTeamLeave = async (req, res) => {
   try {
@@ -79,7 +78,6 @@ const fetchLeaveBalance = async (req, res) => {
   }
 };
 
-
 // Fetch all available leave types
 const fetchLeaveTypes = async (req, res) => {
   try {
@@ -97,7 +95,7 @@ const fetchLeaveTypes = async (req, res) => {
 // Request a leave
 const requestLeaveHandler = async (req, res) => {
   try {
-    const { userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason } = req.body;
+    const { userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason,totalDays } = req.body;
 
     const result = await requestLeave(
       userId, 
@@ -106,7 +104,8 @@ const requestLeaveHandler = async (req, res) => {
       endDate, 
       isHalfDay, 
       halfDayType, 
-      reason
+      reason,
+      totalDays
     );
 
     res.status(201).json({ message: 'Leave requested successfully', result });

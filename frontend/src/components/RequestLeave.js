@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../userContext';
 import { useNavigate } from 'react-router-dom';
-import '../styles/request.css'; 
+import '../styles/request.css';
 
 function LeaveRequest({ onRequestSuccess }) {
   const { user } = useUser();
@@ -15,6 +15,7 @@ function LeaveRequest({ onRequestSuccess }) {
   const [isHalfDay, setIsHalfDay] = useState(false);
   const [halfDayType, setHalfDayType] = useState('');
   const [reason, setReason] = useState('');
+  const [totalDays,setTotalDays] = useState('')
 
   // Fetch leave types when the component mounts
   useEffect(() => {
@@ -23,20 +24,51 @@ function LeaveRequest({ onRequestSuccess }) {
       .catch((err) => console.error('Error fetching leave types:', err));
   }, []);
 
+  useEffect(() => {
+    const calculateLeaveDays = () => {
+      if (!startDate || !endDate) {
+        setTotalDays(0);
+        return;
+      }
+  
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) {
+        setTotalDays(0);
+        return;
+      }
+  
+      let dayCount = 0;
+      let current = new Date(start);
+      while (current <= end) {
+        const dayOfWeek = current.getDay(); // 0 = Sunday, 6 = Saturday
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          dayCount++;
+        }
+        current.setDate(current.getDate() + 1);
+      }
+  
+      setTotalDays(isHalfDay ? 0.5 : dayCount);
+    };
+  
+    calculateLeaveDays();
+  }, [startDate, endDate, isHalfDay]);
+  
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!leaveTypeId || !startDate || !endDate || !reason || (isHalfDay && !halfDayType)) {
       alert('Please fill all required fields.');
       return;
     }
-  
+
     if (new Date(endDate) < new Date(startDate)) {
       alert('End date cannot be before start date.');
       return;
     }
-  
+
     try {
       const res = await axios.post('http://localhost:5000/api/leave/request', {
         userId: user.id,
@@ -45,45 +77,37 @@ function LeaveRequest({ onRequestSuccess }) {
         endDate,
         isHalfDay,
         halfDayType: isHalfDay ? halfDayType : null,
-        reason
+        reason,
+        totalDays
       });
-  
+
       const requestId = res.data.result?.insertId;
-  
+
       if (parseInt(leaveTypeId) === 9 && requestId) {
         await axios.put(`http://localhost:5000/api/leave/approve/${requestId}`);
       }
-  
+
       alert('Leave requested successfully');
       onRequestSuccess?.();
-  
+
       setLeaveTypeId('');
       setStartDate('');
       setEndDate('');
       setIsHalfDay(false);
       setHalfDayType('');
       setReason('');
-  
+
       navigate('/');
-  
+
     } catch (err) {
       console.error('Error submitting leave request:', err);
-  
+
       if (err.response && err.response.data && err.response.data.error) {
         alert(err.response.data.error);
       } else {
         alert('Error submitting leave request');
       }
     }
-  };
-
-  // Calculate total leave days based on selected dates
-  const getLeaveDays = () => {
-    if (!startDate || !endDate) return 0;
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
-    return days > 0 ? days : 0;
   };
 
   return (
@@ -157,8 +181,9 @@ function LeaveRequest({ onRequestSuccess }) {
       />
 
       <p className="leave-request-days">
-        Total Leave Days: {isHalfDay ? "0.5 (Half Day)" : getLeaveDays()}
+        Total Leave Days: {totalDays}
       </p>
+
 
       <div className="leave-request-button-container">
         <button className="leave-request-submit-btn" type="submit">Submit Request</button>

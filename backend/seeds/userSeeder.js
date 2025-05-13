@@ -128,7 +128,7 @@ async function seedUsers() {
 
     console.log('User data seeded successfully!');
   } else {
-    console.log('Users already exist. Skipping users seeding.');
+    console.log('Users already exist. Skipping users seeding...');
   }
 }
 

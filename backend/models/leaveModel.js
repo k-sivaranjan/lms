@@ -37,13 +37,11 @@ const requestLeave = async (
   endDate,
   isHalfDay,
   halfDayType,
-  reason
+  reason,
+  totalDays
 ) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
-
-
-  const totalDays = isHalfDay ? 0.5 : Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
   const balances = await leaveBalanceRepository.getLeaveBalanceByUserAndYear(
     userId,
