@@ -3,7 +3,7 @@
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
-  height:700px;
+  height: 700px;
 }
 
 .leave-policy-title {
@@ -19,9 +19,9 @@
   gap: 1rem;
 }
 
-.leaves-section{
-  max-height:580px;
-  padding:10px;
+.leaves-section {
+  max-height: 580px;
+  padding: 10px;
   overflow: auto;
   margin-bottom: 15px;
   border-radius: 6px;
@@ -68,7 +68,8 @@
   padding: 1rem;
 }
 
-.leave-field, .add-leave-field {
+.leave-field,
+.add-leave-field {
   margin-bottom: 1rem;
 }
 

@@ -1,5 +1,7 @@
 const jwt  = require('jsonwebtoken');
 const dotenv= require ('dotenv');
+const parseExcelToJson = require('../utils/excelParser');
+const Queue = require('bull');
 const { getAllUsers, createUser, getUserByEmail } = require ('../models/userModel.js'); 
 
 dotenv.config();
@@ -64,8 +66,42 @@ const fetchAllUsers = async (req, res) => {
   }
 };
 
+//Bulk Upload Many Users Via Excel Sheet
+const userQueue = new Queue('userQueue', { redis: { port: 6379, host: '127.0.0.1' } });
+
+// Helper function to chunk array into smaller arrays
+const chunkArray = (array, chunkSize) => {
+  const chunks = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+  return chunks;
+};
+
+const CHUNK_SIZE = 100;
+
+const uploadBulkUsers = async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    
+    const users = parseExcelToJson(file.buffer);
+    const userChunks = chunkArray(users, CHUNK_SIZE);
+    
+    for (const chunk of userChunks) {
+      await userQueue.add({ users: chunk });
+    }
+    res.status(200).json({ message: 'Users Added' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to process Excel file' });
+  }
+};
+
 module.exports = {
   register,
   login,
   fetchAllUsers,
+  uploadBulkUsers
 }

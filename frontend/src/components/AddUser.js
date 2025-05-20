@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/addUser.css';
 
@@ -10,9 +11,9 @@ function AddUser() {
     role: '',
     reportingManagerId: ''
   });
-
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   // Handle form input changes
   const handleChange = ({ target: { name, value } }) => {
@@ -36,6 +37,9 @@ function AddUser() {
       if (status === 201) {
         setMessage('User created successfully!');
         setError('');
+        setTimeout(() => {
+          navigate('/');
+        }, 1000);
       }
     } catch (err) {
       setMessage('');

@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import RequestLeave from './components/RequestLeave';
 import AddUser from './components/AddUser';
+import AddManyUser from "./components/AddManyUser"
 import axios from 'axios';
 
 //Check for token in local storage and set it to the axios header
@@ -24,6 +25,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/request-leave" element={<RequestLeave />} />
           <Route path="/add-user" element={<AddUser />} />
+          <Route path="/add-many-users" element={<AddManyUser />} />
         </Routes>
       </Router>
     </UserProvider>

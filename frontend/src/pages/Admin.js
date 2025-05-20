@@ -36,11 +36,13 @@ function Admin({ user, logout, teamMembers, fetchTeamLeaveData }) {
     navigate("/add-user");
   };
 
+  const onAddManyUser = () => {
+    navigate("/add-many-users")
+  }
+
   //Fetching the incoming requests for approval
   const fetchAdminRequests = async () => {
     const res = await axios.get(`http://localhost:5000/api/leave/requests/${user.id}`);
-    console.log("response", res);
-
     if (!res.data) {
       setAdminRequests([]);
     } else {
@@ -93,6 +95,7 @@ function Admin({ user, logout, teamMembers, fetchTeamLeaveData }) {
         <button onClick={handleLogout} className="logout-button">Logout</button>
       </div>
       <button className="add-user-btn" onClick={onAddUser}>Add User</button>
+      <button className="add-user-btn" onClick={onAddManyUser}>Add Multiple Users</button>
       <section className="leave-summary-row">
         <div className="users-on-leave">
           <h3>Users on Leave Today</h3>
@@ -106,7 +109,7 @@ function Admin({ user, logout, teamMembers, fetchTeamLeaveData }) {
             </ul>
           )}
         </div>
-
+        
         <div className="leave-summary-chart">
           <h3>Leave Summary</h3>
           {totalUsers > 0 ? (
@@ -120,6 +123,8 @@ function Admin({ user, logout, teamMembers, fetchTeamLeaveData }) {
                 cy="50%"
                 outerRadius={80}
                 dataKey="value"
+                minAngle={1}
+                label={({ name, percent }) => `${(percent * 100).toFixed(1)}%`}
               >
                 <Cell fill="#ff6384" />
                 <Cell fill="#36a2eb" />
@@ -131,6 +136,7 @@ function Admin({ user, logout, teamMembers, fetchTeamLeaveData }) {
             <p>Loading chart...</p>
           )}
         </div>
+
       </section>
 
       {adminRequests.length > 0 && (
@@ -185,28 +191,28 @@ function Admin({ user, logout, teamMembers, fetchTeamLeaveData }) {
         <h3>All Users</h3>
         <div className='section'>
           <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Role</th>
-            </tr>
-          </thead>
-          <tbody>
-            {allUsers.map(user => {
-              const isOnLeave = usersOnLeaveToday.some(u => u.id === user.id);
-              return (
-                <tr key={user.id}>
-                  <td>{user.id}</td>
-                  <td>{user.name} {<button className={`status-btn ${isOnLeave ? 'out' : 'in'}`}>
-                    {isOnLeave ? 'Out' : 'In'}
-                  </button>}</td>
-                  <td>{user.role}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allUsers.map(user => {
+                const isOnLeave = usersOnLeaveToday.some(u => u.id === user.id);
+                return (
+                  <tr key={user.id}>
+                    <td>{user.id}</td>
+                    <td>{user.name} {<button className={`status-btn ${isOnLeave ? 'out' : 'in'}`}>
+                      {isOnLeave ? 'Out' : 'In'}
+                    </button>}</td>
+                    <td>{user.role}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </section>
 

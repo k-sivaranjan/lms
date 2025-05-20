@@ -1,11 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, fetchAllUsers } = require('../controllers/authController.js');
+const multer = require('multer');
+const { register, login, fetchAllUsers ,uploadBulkUsers} = require('../controllers/authController.js');
 const { authMiddleware, roleMiddleware } = require('../middleware/middleware');
+
+//Upload files into memory as buffers.
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Routes for user management
 router.post('/register', authMiddleware, roleMiddleware('admin'), register);
 router.post('/login', login);
 router.get('/users', authMiddleware, fetchAllUsers);
+router.post('/upload-users',upload.single('file'),uploadBulkUsers);
 
 module.exports = router;

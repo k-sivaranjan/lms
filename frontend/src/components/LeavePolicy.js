@@ -5,6 +5,7 @@ import '../styles/policy.css';
 function LeavePolicy() {
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [newLeave, setNewLeave] = useState({ name: '', maxPerYear: 0, multiApprover: 1 });
+  const [showAddForm, setShowAddForm] = useState(false);
 
   // Fetch leave types when the component mounts
   useEffect(() => {
@@ -38,7 +39,7 @@ function LeavePolicy() {
       alert('Failed to update leave policy');
     }
   };
-// Handle deletion of a leave type
+  // Handle deletion of a leave type
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/leave/types/${id}`);
@@ -53,6 +54,7 @@ function LeavePolicy() {
     try {
       await axios.post('http://localhost:5000/api/leave/types', newLeave);
       setNewLeave({ name: '', maxPerYear: 0, multiApprover: 1 });
+      setShowAddForm(false); // hide the form
       fetchLeaveTypes();
     } catch {
       alert('Failed to add leave type');
@@ -108,46 +110,55 @@ function LeavePolicy() {
           </div>
         ))}
 
-        <div className="leave-card add-leave-card">
-          <div className="leave-card-header add-card-header">
-            <input
-              className="leave-name-input"
-              value={newLeave.name}
-              onChange={(e) => setNewLeave({ ...newLeave, name: e.target.value })}
-              placeholder="Leave Name"
-            />
-          </div>
-          <div className="leave-card-body">
-            <div className="leave-field">
-              <label className="leave-label">Max Days Per Year</label>
+        {showAddForm ? (
+          <div className="leave-card add-leave-card">
+            <div className="leave-card-header add-card-header">
               <input
-                type="number"
-                className="leave-input"
-                value={newLeave.maxPerYear}
-                onChange={(e) => setNewLeave({ ...newLeave, maxPerYear: Number(e.target.value) })}
+                className="leave-name-input"
+                value={newLeave.name}
+                onChange={(e) => setNewLeave({ ...newLeave, name: e.target.value })}
+                placeholder="Leave Name"
               />
             </div>
-            <div className="leave-field">
-              <label className="leave-label">Multi Approver</label>
-              <select
-                className="leave-select"
-                value={newLeave.multiApprover}
-                onChange={(e) => setNewLeave({ ...newLeave, multiApprover: Number(e.target.value) })}
-              >
-                {[0, 1, 2, 3].map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="leave-actions">
-              <button className="add-btn" onClick={handleAdd}>
-                Add
-              </button>
+            <div className="leave-card-body">
+              <div className="leave-field">
+                <label className="leave-label">Max Days Per Year</label>
+                <input
+                  type="number"
+                  className="leave-input"
+                  value={newLeave.maxPerYear}
+                  onChange={(e) => setNewLeave({ ...newLeave, maxPerYear: Number(e.target.value) })}
+                />
+              </div>
+              <div className="leave-field">
+                <label className="leave-label">Multi Approver</label>
+                <select
+                  className="leave-select"
+                  value={newLeave.multiApprover}
+                  onChange={(e) => setNewLeave({ ...newLeave, multiApprover: Number(e.target.value) })}
+                >
+                  {[0, 1, 2, 3].map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="leave-actions">
+                <button className="add-btn" onClick={handleAdd}>
+                  Add
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="add-leave-btn">
+            <button className="add-btn" onClick={() => setShowAddForm(true)}>
+              Add Leave Type
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   );
