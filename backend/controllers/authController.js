@@ -2,7 +2,7 @@ const jwt  = require('jsonwebtoken');
 const dotenv= require ('dotenv');
 const parseExcelToJson = require('../utils/excelParser');
 const Queue = require('bull');
-const { getAllUsers, createUser, getUserByEmail } = require ('../models/userModel.js'); 
+const { getAllUsers, createUser, getUserByEmail, updatePasswordByid } = require ('../models/userModel.js'); 
 
 dotenv.config();
 const SECRET_KEY = process.env.JWT_SECRET || 'default_secret_key';
@@ -50,6 +50,20 @@ const login = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+const updatePassword = async (req, res) => {
+  const userId = parseInt(req.params.userId);
+  const { password } = req.body;
+
+  try {
+    const updateNewPassword = await updatePasswordByid(userId, password);
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Error updating password:", error);
+    res.status(500).json({ message: "Failed to update password" });
+  }
+};
+
 
 // Fetch all users
 const fetchAllUsers = async (req, res) => {
@@ -103,5 +117,6 @@ module.exports = {
   register,
   login,
   fetchAllUsers,
+  updatePassword,
   uploadBulkUsers
 }

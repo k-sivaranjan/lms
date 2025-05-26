@@ -18,6 +18,11 @@
   margin-bottom:10px;
 }
 
+.profile-btn{
+  background:none;
+  border: none;
+}
+
 .welcome-message {
   font-size: 1.5rem;
   color: #333;

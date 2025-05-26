@@ -157,9 +157,12 @@ function Home() {
         <h2 className="welcome-message">
           Welcome <span>{user.name}</span>!
         </h2>
-        <button onClick={handleLogout} className="logout-button">
-          Logout
-        </button>
+        <div>
+          <button className='profile-btn' onClick={() => navigate('/profile')}>Profile</button>
+          <button onClick={handleLogout} className="logout-button">
+            Logout
+          </button>
+          </div>
       </div>
 
       <div className="leave-balance">

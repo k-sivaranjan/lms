@@ -2,7 +2,8 @@ const {
   getAllUsers: repoGetAllUsers,
   createUser: repoCreateUser,
   getUserByEmail: repoGetUserByEmail,
-  getUserById: repoGetUserById
+  getUserById: repoGetUserById,
+  updatePasswordByid:repoUpdatePasswordById
 } = require('../repositories/UserRepository');
 
 // Get all users from the database
@@ -25,9 +26,15 @@ const getUserById = async (id) => {
   return repoGetUserById(id);
 };
 
+//Update Old Password to New
+const updatePasswordByid = async(userId,password) =>{
+  return repoUpdatePasswordById(userId,password)
+}
+
 module.exports = {
   getAllUsers,
   createUser,
   getUserByEmail,
+  updatePasswordByid,
   getUserById
 };
