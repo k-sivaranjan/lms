@@ -19,7 +19,7 @@ function LeaveRequest({ onRequestSuccess }) {
 
   // Fetch leave types when the component mounts
   useEffect(() => {
-    api.get('/api/leave/types')
+    api.get('/leave/types')
       .then((res) => setLeaveTypes(res.data))
       .catch((err) => console.error('Error fetching leave types:', err));
   }, []);
@@ -70,7 +70,7 @@ function LeaveRequest({ onRequestSuccess }) {
     }
 
     try {
-      const res = await api.post('/api/leave/request', {
+      const res = await api.post('/leave/request', {
         userId: user.id,
         managerId:user.managerId,
         leaveTypeId,
