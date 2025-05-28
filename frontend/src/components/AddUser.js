@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import '../styles/addUser.css';
 
 function AddUser() {
@@ -32,7 +32,7 @@ function AddUser() {
     }
 
     try {
-      const { status } = await axios.post('http://localhost:5000/api/auth/register', formData);
+      const { status } = await api.post('/auth/register', formData);
 
       if (status === 201) {
         setMessage('User created successfully!');

@@ -73,9 +73,10 @@ const getLeaveHistoryByUserId = async (userId) => {
 };
 
 // Create a new leave request
-const createLeaveRequest = async (userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason, status, finalApprovalLevel, totalDays) => {
+const createLeaveRequest = async (userId,managerId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason, status, finalApprovalLevel, totalDays) => {
   const leaveRequest = leaveRequestRepo.create({
     userId,
+    managerId,
     leaveTypeId,
     startDate,
     endDate,

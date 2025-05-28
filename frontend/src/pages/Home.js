@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useUser } from '../userContext';
 import Admin from './Admin';
 import LeaveHistory from '../components/LeaveHistory';
 import Calendar from '../components/Calendar';
+import api from "../api"
 import {
   PieChart, Pie, Cell, Tooltip as RechartsTooltip,
   BarChart, Bar, XAxis, YAxis, Legend, ResponsiveContainer
@@ -45,7 +45,7 @@ function Home() {
   //Fetching the leave history of an employee
   const fetchLeaveHistory = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/leave/history/${user.id}`);
+      const res = await api.get(`/leave/history/${user.id}`);
       setLeaveHistory(res.data.leaveHistory);
     } catch {
       setError(prev => ({ ...prev, history: 'Error fetching leave history' }));
@@ -58,7 +58,7 @@ function Home() {
   const fetchBalance = async () => {
     if (!user || user.role === "admin") return;
     try {
-      const res = await axios.get(`http://localhost:5000/api/leave/balance/${user.id}`);
+      const res = await api.get(`/leave/balance/${user.id}`);
       setLeaveTotal(res.data.totalLeaves);
       setLeaveBalance(res.data.totalBalance);
       setLeaveDetails(res.data.leaveDetails);
@@ -73,7 +73,7 @@ function Home() {
   const fetchIncomingRequests = async () => {
     if (!user || user.role === "employee") return;
     try {
-      const res = await axios.get(`http://localhost:5000/api/leave/requests/${user.id}`);
+      const res = await api.get(`/leave/requests/${user.id}`);
       setIncomingRequests(res.data.incomingRequests);
     } catch {
       setError(prev => ({ ...prev, incoming: 'Error fetching incoming requests' }));
@@ -85,7 +85,7 @@ function Home() {
   //Fetching all users in the same team
   const fetchAllUsersinTeam = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/auth/users');
+      const res = await api.get('/auth/users');
       const currentManagerId = user.id; // use logged-in user's ID
       let teamMembers;
       if (user.role !== 'admin'){
@@ -102,7 +102,7 @@ function Home() {
   // Fetch team leave data based on selected month and year
   const fetchTeamLeaveData = async (teamMemberIds, month, year) => {
     try {
-      const response = await axios.get('http://localhost:5000/api/leave/team-leaves', {
+      const response = await api.get('/leave/team-leaves', {
         params: {
           teamMembers: teamMemberIds.join(','),
           month: month,
@@ -123,7 +123,7 @@ function Home() {
   // Approve or Reject a leave request
   const handleApproveReject = async (requestId, action) => {
     try {
-      await axios.put(`http://localhost:5000/api/leave/${action}/${requestId}`);
+      await api.put(`/leave/${action}/${requestId}`);
       alert(`Request ${action}ed successfully`);
       setIncomingRequests(prev => prev.map(req => req.id === requestId ? { ...req, status: action } : req));
     } catch {

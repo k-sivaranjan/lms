@@ -32,6 +32,7 @@ const getLeaveTypes = async () => {
 // Request a leave
 const requestLeave = async (
   userId,
+  managerId,
   leaveTypeId,
   startDate,
   endDate,
@@ -71,7 +72,6 @@ const requestLeave = async (
   }
 
   const role = user.role;
-  const managerId = user.managerId;
 
   const maxApproverByRole = role === 'employee' ? 3 : role === 'manager' ? 2 : 1;
   const finalApprovalLevel = totalDays >= 5 ? maxApproverByRole : Math.min(multiApprover, maxApproverByRole);
@@ -97,6 +97,7 @@ const requestLeave = async (
 
   const leaveRequest = await leaveRequestRepository.createLeaveRequest(
     userId,
+    managerId,
     leaveTypeId,
     new Date(startDate),
     new Date(endDate),

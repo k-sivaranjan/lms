@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../userContext';
-import axios from 'axios';
+import api from "../api";
 import '../styles/profile.css';
 
 function Profile() {
@@ -20,7 +20,7 @@ function Profile() {
         }
 
         try {
-            const res = await axios.put(`http://localhost:5000/api/auth/password/${user.id}`, { password });
+            const res = await api.put(`/auth/password/${user.id}`, { password });
             setMessage(res.data.message || 'Password updated successfully');
             setPassword('');
             setConfirmPassword('');

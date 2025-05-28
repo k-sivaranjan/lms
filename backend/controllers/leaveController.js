@@ -95,10 +95,11 @@ const fetchLeaveTypes = async (req, res) => {
 // Request a leave
 const requestLeaveHandler = async (req, res) => {
   try {
-    const { userId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason,totalDays } = req.body;
-
+    const { userId,managerId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason,totalDays } = req.body;
+   
     const result = await requestLeave(
       userId, 
+      managerId,
       leaveTypeId, 
       startDate, 
       endDate, 

@@ -1,11 +1,12 @@
-const jwt  = require('jsonwebtoken');
-const dotenv= require ('dotenv');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+const bcrypt = require('bcrypt');
 const parseExcelToJson = require('../utils/excelParser');
 const Queue = require('bull');
-const { getAllUsers, createUser, getUserByEmail, updatePasswordByid } = require ('../models/userModel.js'); 
+const { getAllUsers, createUser, getUserByEmail, updatePasswordByid } = require('../models/userModel.js');
 
 dotenv.config();
-const SECRET_KEY = process.env.JWT_SECRET || 'default_secret_key';
+const SECRET_KEY = process.env.JWT_SECRET;
 
 // Register a new user
 const register = async (req, res) => {
@@ -17,7 +18,9 @@ const register = async (req, res) => {
       return res.status(400).json({ error: 'User with this email already exists' });
     }
 
-    await createUser(name, email, password, role, reportingManagerId);
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await createUser(name, email, hashedPassword, role, reportingManagerId);
     res.status(201).json({ message: 'User Added successfully' });
   } catch (err) {
     console.error('Registration error:', err);
@@ -29,10 +32,14 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await getUserByEmail(email);
 
-    if (!user || user.password !== password) {
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
+    const isPasswordMatch = bcrypt.compare(password, user.password); 
+    if (!isPasswordMatch) {
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
@@ -51,12 +58,15 @@ const login = async (req, res) => {
   }
 };
 
+// Update password
 const updatePassword = async (req, res) => {
   const userId = parseInt(req.params.userId);
   const { password } = req.body;
 
   try {
-    const updateNewPassword = await updatePasswordByid(userId, password);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await updatePasswordByid(userId, hashedPassword);
+
     res.status(200).json({ message: "Password updated successfully" });
   } catch (error) {
     console.error("Error updating password:", error);

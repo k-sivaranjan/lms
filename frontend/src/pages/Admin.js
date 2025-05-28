@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
-import axios from 'axios';
 import LeavePolicy from '../components/LeavePolicy';
 import Calendar from '../components/Calendar';
+import api from "../api"
 import '../styles/admin.css';
 
 function Admin({ user, logout, teamMembers, fetchTeamLeaveData }) {
@@ -42,7 +42,7 @@ function Admin({ user, logout, teamMembers, fetchTeamLeaveData }) {
 
   //Fetching the incoming requests for approval
   const fetchAdminRequests = async () => {
-    const res = await axios.get(`http://localhost:5000/api/leave/requests/${user.id}`);
+    const res = await api.get(`/leave/requests/${user.id}`);
     if (!res.data) {
       setAdminRequests([]);
     } else {
@@ -52,7 +52,7 @@ function Admin({ user, logout, teamMembers, fetchTeamLeaveData }) {
 
   //Fetching all users who are currently on leave today
   const fetchUsersOnLeaveToday = async () => {
-    const res = await axios.get('http://localhost:5000/api/leave/on-leave-today');
+    const res = await api.get('/leave/on-leave-today');
     if (!res.data) {
       setUsersOnLeaveToday([]);
       setLeaveUsers(0);
@@ -64,7 +64,7 @@ function Admin({ user, logout, teamMembers, fetchTeamLeaveData }) {
 
   //Fetching all users
   const fetchAllUsers = async () => {
-    const res = await axios.get('http://localhost:5000/api/auth/users');
+    const res = await api.get('/auth/users');
     setAllUsers(res.data.users);
     setTotalUsers(res.data.count);
   };
@@ -72,7 +72,7 @@ function Admin({ user, logout, teamMembers, fetchTeamLeaveData }) {
   //Handle approve or reject of leave requests
   const handleApproveReject = async (requestId, action) => {
     try {
-      await axios.put(`http://localhost:5000/api/leave/${action}/${requestId}`);
+      await api.put(`/leave/${action}/${requestId}`);
       setAdminRequests(prevRequests =>
         prevRequests.map(req => req.id === requestId ? { ...req, status: action } : req)
       );

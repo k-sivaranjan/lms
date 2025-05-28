@@ -7,14 +7,14 @@ import Profile from "./components/Profile"
 import RequestLeave from './components/RequestLeave';
 import AddUser from './components/AddUser';
 import AddManyUser from "./components/AddManyUser"
-import axios from 'axios';
+import api from './api';
 
 //Check for token in local storage and set it to the axios header
 function App() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.defaults.headers['Authorization'] = `Bearer ${token}`;
+      api.defaults.headers['Authorization'] = `Bearer ${token}`;
     }
   }, []);
 

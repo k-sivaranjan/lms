@@ -29,6 +29,10 @@ const LeaveRequest = new EntitySchema({
       name: "user_id",
       type: Number,
     },
+    managerId: {
+      name: "manager_id",
+      type: Number,
+    },
     leaveTypeId: {
       name: "leave_type_id",
       type: Number,

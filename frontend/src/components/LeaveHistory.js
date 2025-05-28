@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import '../styles/history.css';
 
 function LeaveHistory({ leaveHistory }) {
@@ -11,7 +11,7 @@ function LeaveHistory({ leaveHistory }) {
     if (!window.confirm('Are you sure you want to cancel this leave?')) return;
 
     try {
-      await axios.put(`http://localhost:5000/api/leave/cancel/${leaveId}`);
+      await api.put(`/leave/cancel/${leaveId}`);
       alert('Leave cancelled');
       closeModal();
     } catch (err) {

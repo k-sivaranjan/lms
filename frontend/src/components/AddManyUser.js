@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import '../styles/addUser.css';
 
 function AddManyUser() {
@@ -26,7 +26,7 @@ function AddManyUser() {
     formData.append('file', file);
 
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/upload-users', formData);
+      const res = await api.post('/auth/upload-users', formData);
 
       if (res.status >= 200 && res.status < 300) {
         setMessage(res.data.message);

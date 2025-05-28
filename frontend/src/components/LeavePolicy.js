@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import '../styles/policy.css';
 
 function LeavePolicy() {
@@ -15,7 +15,7 @@ function LeavePolicy() {
   // Function to fetch leave types from backend
   const fetchLeaveTypes = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/leave/types');
+      const res = await api.get('/leave/types');
       setLeaveTypes(res.data);
     } catch (err) {
       console.error('Error fetching leave types:', err);
@@ -32,7 +32,7 @@ function LeavePolicy() {
   // Handle updates of leave type
   const handleUpdate = async (id, updatedLeave) => {
     try {
-      await axios.put(`http://localhost:5000/api/leave/types/${id}`, updatedLeave);
+      await api.put(`/leave/types/${id}`, updatedLeave);
       alert('Leave policy updated');
       fetchLeaveTypes();
     } catch {
@@ -42,7 +42,7 @@ function LeavePolicy() {
   // Handle deletion of a leave type
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/leave/types/${id}`);
+      await api.delete(`/leave/types/${id}`);
       fetchLeaveTypes();
     } catch {
       alert('Failed to delete leave type');
@@ -52,7 +52,7 @@ function LeavePolicy() {
   // Handle addition of a new leave type
   const handleAdd = async () => {
     try {
-      await axios.post('http://localhost:5000/api/leave/types', newLeave);
+      await api.post('/leave/types', newLeave);
       setNewLeave({ name: '', maxPerYear: 0, multiApprover: 1 });
       setShowAddForm(false); // hide the form
       fetchLeaveTypes();

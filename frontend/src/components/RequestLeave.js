@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from "../api"
 import { useUser } from '../userContext';
 import { useNavigate } from 'react-router-dom';
 import '../styles/request.css';
@@ -19,7 +19,7 @@ function LeaveRequest({ onRequestSuccess }) {
 
   // Fetch leave types when the component mounts
   useEffect(() => {
-    axios.get('http://localhost:5000/api/leave/types')
+    api.get('/api/leave/types')
       .then((res) => setLeaveTypes(res.data))
       .catch((err) => console.error('Error fetching leave types:', err));
   }, []);
@@ -70,8 +70,9 @@ function LeaveRequest({ onRequestSuccess }) {
     }
 
     try {
-      const res = await axios.post('http://localhost:5000/api/leave/request', {
+      const res = await api.post('/api/leave/request', {
         userId: user.id,
+        managerId:user.managerId,
         leaveTypeId,
         startDate,
         endDate,
@@ -84,7 +85,7 @@ function LeaveRequest({ onRequestSuccess }) {
       const requestId = res.data.result?.insertId;
 
       if (parseInt(leaveTypeId) === 9 && requestId) {
-        await axios.put(`http://localhost:5000/api/leave/approve/${requestId}`);
+        await api.put(`leave/approve/${requestId}`);
       }
 
       alert('Leave requested successfully');
@@ -103,7 +104,7 @@ function LeaveRequest({ onRequestSuccess }) {
       console.error('Error submitting leave request:', err);
 
       if (err.response && err.response.data && err.response.data.error) {
-        alert(err.response.data.error);
+        console.log(err.response.data.error);
       } else {
         alert('Error submitting leave request');
       }
