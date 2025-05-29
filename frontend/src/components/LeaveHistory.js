@@ -26,18 +26,6 @@ function LeaveHistory({ leaveHistory }) {
     return `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()}`;
   };
 
-  // Helper function to format leave statuses
-  const formatStatus = (status) => {
-    const statusMap = {
-      pending_level_1: 'Pending (L1)',
-      pending_level_2: 'Pending (L2)',
-      pending_level_3: 'Pending (L3)',
-      approved: 'Approved',
-      rejected: 'Rejected',
-    };
-    return statusMap[status] || status;
-  };
-
   // Modal component for viewing leave details
   const openModal = (leave) => {
     setSelectedLeave(leave);
@@ -84,7 +72,7 @@ function LeaveHistory({ leaveHistory }) {
                 <td>{leave.leave_type}</td>
                 <td>{formatDate(leave.start_date)}</td>
                 <td>{formatDate(leave.end_date)}</td>
-                <td>{formatStatus(leave.status)}</td>
+                <td>{leave.status}</td>
                 <td>
                   <button onClick={() => openModal(leave)} className="view-button">View Request</button>
                 </td>
@@ -101,7 +89,7 @@ function LeaveHistory({ leaveHistory }) {
             <p><strong>Leave Type:</strong> {selectedLeave.leave_type}</p>
             <p><strong>From:</strong> {formatDate(selectedLeave.start_date)}</p>
             <p><strong>To:</strong> {formatDate(selectedLeave.end_date)}</p>
-            <p><strong>Status:</strong> {formatStatus(selectedLeave.status)}</p>
+            <p><strong>Status:</strong> {selectedLeave.status}</p>
             <p><strong>Reason:</strong> {selectedLeave.reason || 'N/A'}</p>
             <p><strong>Manager:</strong> {selectedLeave.manager_name || 'N/A'}</p>
 

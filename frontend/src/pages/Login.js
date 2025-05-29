@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../userContext';
-import { apiPostWithRetry } from '../utils/api';
-import api from "../api"
+import api,{apiPostWithRetry} from "../api"
 import '../styles/login.css';
 
 function Login() {

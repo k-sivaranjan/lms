@@ -85,7 +85,7 @@ function LeaveRequest({ onRequestSuccess }) {
       const requestId = res.data.result?.insertId;
 
       if (parseInt(leaveTypeId) === 9 && requestId) {
-        await api.put(`leave/approve/${requestId}`);
+        await api.put(`/leave/approve/${requestId}`);
       }
 
       alert('Leave requested successfully');

@@ -12,6 +12,6 @@ router.post('/register', authMiddleware, roleMiddleware('admin'), register);
 router.post('/login', login);
 router.get('/users', authMiddleware, fetchAllUsers);
 router.post('/upload-users',roleMiddleware('admin'),uploadBulkUsers);
-router.put('/password/:userId',updatePassword)
+router.put('/password/:userId',authMiddleware,updatePassword)
 
 module.exports = router;

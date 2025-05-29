@@ -62,7 +62,7 @@ const LeaveRequest = new EntitySchema({
     },
     status: {
       type: "enum",
-      enum: Object.values(LeaveStatus),
+      enum: LeaveStatus,
       default: LeaveStatus.PENDING,
     },
     finalApprovalLevel: {

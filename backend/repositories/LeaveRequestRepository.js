@@ -44,7 +44,7 @@ const getTeamLeave = async (userIds, month, year, role) => {
     ])
     .andWhere('MONTH(lr.start_date) = :month', { month })
     .andWhere('YEAR(lr.start_date) = :year', { year })
-    .andWhere('lr.status = :status', { status: 'Approved' });
+    .andWhere('lr.status = :status', { status: LeaveStatus.APPROVED });
 
   if (role !== 'admin') {
     query.andWhere('lr.user_id IN (:...userIds)', { userIds });
@@ -61,6 +61,7 @@ const getLeaveHistoryByUserId = async (userId) => {
     order: { createdAt: 'DESC' }
   });
 
+  
   return leaveRequests.map(request => ({
     id: request.id,
     leave_type: request.leaveType.name,
