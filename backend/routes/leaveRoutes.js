@@ -39,7 +39,7 @@ router.put('/types/:id', authMiddleware, roleMiddleware('admin'), updateLeaveHan
 router.delete('/types/:id', authMiddleware, roleMiddleware('admin'), deleteLeaveHandler);
 
 // Admin Routes
-router.get('/on-leave-today', authMiddleware,fetchUsersOnLeaveToday);
+router.get('/on-leave-today', authMiddleware,roleMiddleware('admin'),fetchUsersOnLeaveToday);
 
 // Team Leave
 router.get('/team-leaves', authMiddleware, fetchTeamLeave);
