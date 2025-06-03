@@ -1,9 +1,6 @@
-const { AppDataSource } = require('../config/db');
-const { LeaveStatus, HalfDayType } = require('../entities/LeaveRequest');
-const { LeaveType } = require('../entities/LeaveType');
-const { LeaveBalance } = require('../entities/LeaveBalance');
+const { LeaveStatus } = require('../entities/LeaveRequest');
 
-
+const leavePolicyRepository = require('../repositories/LeavePolicyRepository');
 const leaveTypeRepository = require('../repositories/LeaveTypeRepository');
 const leaveRequestRepository = require('../repositories/LeaveRequestRepository');
 const leaveBalanceRepository = require('../repositories/LeaveBalanceRepository');
@@ -15,8 +12,8 @@ const getUsersOnLeaveToday = async () => {
 };
 
 // Get team leave data
-const getTeamLeave = async (userIdArray, month, year) => {
-  return await leaveRequestRepository.getTeamLeave(userIdArray, month, year);
+const getTeamLeave = async ({ userIdArray, month, year }) => {
+  return await leaveRequestRepository.getTeamLeave({ userIdArray, month, year });
 };
 
 // Get leave balance by user and year
@@ -24,26 +21,30 @@ const getLeaveBalance = async (userId, year) => {
   return leaveBalanceRepository.getLeaveBalanceByUserAndYear(userId, year);
 };
 
+//Get leave balance by allowed type
+const getLeaveBalanceByType = async ({ userId, year, allowedLeaveTypeIds }) => {
+  return leaveBalanceRepository.getLeaveBalancesByAllowedTypes({ userId, year, allowedLeaveTypeIds })
+}
+
 // Get all leave types
 const getLeaveTypes = async () => {
   return leaveTypeRepository.getAllLeaveTypes();
 };
 
+//Get Leave Polcies By Role
+const getLeavePolicyByRole = async (roleId) => {
+  return leavePolicyRepository.getLeavePoliciesByRoleId(roleId)
+};
+
+//Get Leave Policy
+const getLeavePolicy = async () => {
+  return leavePolicyRepository.getAllPolicy();
+}
+
 // Request a leave
 const requestLeave = async (
-  userId,
-  managerId,
-  leaveTypeId,
-  startDate,
-  endDate,
-  isHalfDay,
-  halfDayType,
-  reason,
-  totalDays
+  { userId, managerId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason, totalDays }
 ) => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-
   const balances = await leaveBalanceRepository.getLeaveBalanceByUserAndYear(
     userId,
     new Date(startDate).getFullYear()
@@ -71,7 +72,7 @@ const requestLeave = async (
     throw new Error('User not found');
   }
 
-  const role = user.role;
+  const role = user.role.name;
 
   const maxApproverByRole = role === 'employee' ? 3 : role === 'manager' ? 2 : 1;
   const finalApprovalLevel = totalDays >= 5 ? maxApproverByRole : Math.min(multiApprover, maxApproverByRole);
@@ -89,24 +90,25 @@ const requestLeave = async (
   }
 
   let initialStatus;
-  if (leaveTypeId ===9){
+
+  if (parseInt(leaveTypeId) === 9) {
     initialStatus = LeaveStatus.APPROVED
-  }else{
+  } else {
     initialStatus = finalApprovalLevel > 1 ? LeaveStatus.PENDING_L1 : LeaveStatus.PENDING;
   }
 
   const leaveRequest = await leaveRequestRepository.createLeaveRequest(
-    userId,
+    {userId,
     managerId,
     leaveTypeId,
-    new Date(startDate),
-    new Date(endDate),
+    startDate :new Date(startDate),
+    endDate : new Date(endDate),
     isHalfDay,
     halfDayType,
     reason,
-    initialStatus,
+    status :initialStatus,
     finalApprovalLevel,
-    totalDays
+    totalDays}
   );
 
   return leaveRequest;
@@ -116,6 +118,10 @@ const requestLeave = async (
 const getLeaveHistory = async (userId) => {
   return leaveRequestRepository.getLeaveHistoryByUserId(userId);
 };
+
+const getRequestsHistory = async (userId)=>{
+  return leaveRequestRepository.getTeamRequestsHistoryByManagerId(userId);
+}
 
 // Cancel a leave request
 const cancelLeave = async (leaveRequestId) => {
@@ -163,7 +169,7 @@ const getIncomingRequests = async (userId) => {
     return [];
   }
 
-  return leaveRequestRepository.getIncomingRequests(userId, user.role);
+  return leaveRequestRepository.getIncomingRequests(userId, user.role.name);
 };
 
 // Approve a leave request
@@ -275,14 +281,24 @@ const rejectLeave = async (requestId) => {
 };
 
 // Add a new leave type
-const addLeaveType = async (name, maxPerYear, multiApprover = 1) => {
-  return leaveTypeRepository.createLeaveType(name, maxPerYear, multiApprover);
+const addLeaveType = async ({name, maxPerYear, multiApprover = 1}) => {
+  return leaveTypeRepository.createLeaveType({name, maxPerYear, multiApprover});
 };
 
+//Add a new leave Policy
+const addLeavePolicy = async ({id,accrual_per_year,roleId})=>{
+  return leavePolicyRepository.createLeavePolicy({id,accrual_per_year,roleId})
+}
+
 // Update an existing leave type
-const updateLeaveType = async (id, name, maxPerYear, multiApprover = 1) => {
-  return leaveTypeRepository.updateLeaveType(id, name, maxPerYear, multiApprover);
+const updateLeaveType = async ({id, name, maxPerYear, multiApprover = 1}) => {
+  return leaveTypeRepository.updateLeaveType({id, name, maxPerYear, multiApprover});
 };
+
+//Update an existing leave policy
+const updateLeavePolicy = async ({id, accrual_per_year, roleId}) => {
+  return leavePolicyRepository.updateLeave({id, accrual_per_year, roleId})
+}
 
 // Delete a leave type
 const deleteLeaveType = async (id) => {
@@ -293,14 +309,20 @@ module.exports = {
   getUsersOnLeaveToday,
   getTeamLeave,
   getLeaveBalance,
+  getLeaveBalanceByType,
   getLeaveTypes,
+  getLeavePolicy,
+  getLeavePolicyByRole,
   requestLeave,
   getLeaveHistory,
+  getRequestsHistory,
   cancelLeave,
   getIncomingRequests,
   approveLeave,
   rejectLeave,
   addLeaveType,
+  addLeavePolicy,
   updateLeaveType,
+  updateLeavePolicy,
   deleteLeaveType
 };

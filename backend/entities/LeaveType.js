@@ -16,9 +16,10 @@ const LeaveType = new EntitySchema({
     maxPerYear: {
       name: "max_per_year",
       type: Number,
+      nullable: true
     },
     multiApprover: {
-      name: "multi_approver", 
+      name: "multi_approver",
       type: Number,
       default: 1,
     },
@@ -34,6 +35,11 @@ const LeaveType = new EntitySchema({
       target: "LeaveBalance",
       inverseSide: "leaveType",
     },
+    leavePolicies: {
+      type: "one-to-many",
+      target: "LeavePolicy",
+      inverseSide: "leaveType",
+    }
   },
 });
 

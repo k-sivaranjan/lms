@@ -10,13 +10,13 @@ const getAllLeaveTypes = async () => leaveTypeRepo.find();
 const getLeaveTypeById = async (id) => leaveTypeRepo.findOne({ where: { id } });
 
 // Create a new leave type
-const createLeaveType = async (name, maxPerYear, multiApprover = 1) => {
+const createLeaveType = async ({name, maxPerYear, multiApprover}) => {
   const leaveType = leaveTypeRepo.create({ name, maxPerYear, multiApprover });
   return leaveTypeRepo.save(leaveType);
 };
 
 // Update an existing leave type
-const updateLeaveType = async (id, name, maxPerYear, multiApprover = 1) => {
+const updateLeaveType = async ({id, name, maxPerYear, multiApprover = 1}) => {
   const leaveType = await leaveTypeRepo.findOne({ where: { id } });
   if (!leaveType) return null;
   leaveType.name = name;

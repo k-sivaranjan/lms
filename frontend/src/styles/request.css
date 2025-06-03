@@ -44,6 +44,9 @@
   margin-right: 10px;
 }
 
+.leave{
+  color: red;
+}
 .leave-request-submit-btn {
   display: block;
   margin: 20px auto 0 auto;
@@ -54,7 +57,6 @@
   border-radius: 6px;
   font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
   width: auto;
   height: auto;
   min-width: 150px;
@@ -70,7 +72,23 @@
   border-color: #4CAF50;
 }
 
-.leave-request-label + .leave-request-input,
-.leave-request-label + .leave-request-textarea {
-  margin-top: 10px;
+@media (max-width: 600px) {
+  .leave-request-form {
+    max-width: 95%;
+    margin: 20px auto;
+    padding: 15px;
+  }
+
+  .leave-request-input,
+  .leave-request-textarea {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  .leave-request-submit-btn {
+    width: 100%;
+    min-width: unset;
+    padding: 12px 0;
+    font-size: 18px;
+  }
 }

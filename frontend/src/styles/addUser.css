@@ -6,6 +6,7 @@
   border-radius: 12px;
   background-color: #f9f9f9;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
 
 .add-user-form h3 {
@@ -27,7 +28,8 @@
   border-radius: 8px;
   font-size: 14px;
   outline: none;
-  transition: border 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .add-user-form input:focus,
@@ -43,7 +45,7 @@
   border-radius: 8px;
   color: white;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  margin: 10px 0;
 }
 
 .add-user-form button:hover {
@@ -67,4 +69,23 @@
   color: green;
   font-weight: bold;
   text-align: center;
+}
+
+@media (max-width: 480px) {
+  .add-user-form {
+    margin: 20px;
+    padding: 16px;
+    border-radius: 8px;
+  }
+
+  .add-user-form input,
+  .add-user-form select,
+  .add-user-form button {
+    font-size: 15px;
+    padding: 12px;
+  }
+
+  .add-user-form h3 {
+    font-size: 20px;
+  }
 }

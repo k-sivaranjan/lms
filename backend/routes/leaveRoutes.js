@@ -6,7 +6,9 @@ const {
   fetchTeamLeave,
   fetchLeaveBalance,
   fetchLeaveTypes,
+  fetchLeaveTypesByRole,
   requestLeaveHandler,
+  getRequestsHistoryHandler,
   getLeaveHistoryHandler,
   cancelLeaveHandler,
   getIncomingRequestsHandler,
@@ -23,6 +25,7 @@ const { authMiddleware, roleMiddleware } = require('../middleware/middleware');
 router.post('/request', authMiddleware, requestLeaveHandler);
 router.put('/cancel/:leaveRequestId', authMiddleware, cancelLeaveHandler);
 router.get('/history/:userId', authMiddleware, getLeaveHistoryHandler);
+router.get('/requests/history/:userId', authMiddleware, getRequestsHistoryHandler);
 
 //Leave Balance
 router.get('/balance/:userId', authMiddleware, fetchLeaveBalance);
@@ -33,6 +36,7 @@ router.put('/approve/:approveId', authMiddleware, approveLeaveHandler);
 router.put('/reject/:rejectId', authMiddleware, rejectLeaveHandler);
 
 //Leave Types
+router.get('/types/:userId', authMiddleware, fetchLeaveTypesByRole);
 router.get('/types', authMiddleware, fetchLeaveTypes);
 router.post('/types', authMiddleware, roleMiddleware('admin'), createLeaveHandler);
 router.put('/types/:id', authMiddleware, roleMiddleware('admin'), updateLeaveHandler);

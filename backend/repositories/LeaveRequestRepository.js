@@ -10,25 +10,23 @@ const getUsersOnLeaveToday = async () => {
 
   const result = await leaveRequestRepo
     .createQueryBuilder('lr')
-    .select(['u.id AS userId', 'u.name AS userName', 'u.email AS userEmail', 'lr.startDate AS leaveStartDate', 'lr.endDate AS leaveEndDate', 'lt.name AS leaveTypeName'])
+    .select(['u.id AS userId', 'u.name AS userName'])
     .innerJoin('lr.user', 'u')
-    .innerJoin('lr.leaveType', 'lt')
     .where('lr.status = :status', { status: LeaveStatus.APPROVED })
     .andWhere(':today BETWEEN lr.startDate AND lr.endDate', { today })
+    .groupBy('u.id')
+    .addGroupBy('u.name')
     .getRawMany();
 
   return result.map(row => ({
     id: row.userId,
-    name: row.userName,
-    email: row.userEmail,
-    startDate: row.leaveStartDate,
-    endDate: row.leaveEndDate,
-    leaveType: row.leaveTypeName
+    name: row.userName
   }));
 };
 
+
 // Get team leave requests for a specific month and year
-const getTeamLeave = async (userIds, month, year, role) => {
+const getTeamLeave = async ({ userIdArray, month, year, role }) => {
   const query = leaveRequestRepo
     .createQueryBuilder('lr')
     .leftJoin('lr.leaveType', 'lt')
@@ -47,7 +45,7 @@ const getTeamLeave = async (userIds, month, year, role) => {
     .andWhere('lr.status = :status', { status: LeaveStatus.APPROVED });
 
   if (role !== 'admin') {
-    query.andWhere('lr.user_id IN (:...userIds)', { userIds });
+    query.andWhere('lr.user_id IN (:...userIdArray)', { userIdArray });
   }
 
   return await query.getRawMany();
@@ -61,7 +59,7 @@ const getLeaveHistoryByUserId = async (userId) => {
     order: { createdAt: 'DESC' }
   });
 
-  
+
   return leaveRequests.map(request => ({
     id: request.id,
     leave_type: request.leaveType.name,
@@ -73,8 +71,33 @@ const getLeaveHistoryByUserId = async (userId) => {
   }));
 };
 
+const getTeamRequestsHistoryByManagerId = async (managerId) => {
+  const leaveRequests = await leaveRequestRepo
+    .createQueryBuilder('leaveRequest')
+    .leftJoinAndSelect('leaveRequest.user', 'user')
+    .leftJoinAndSelect('user.manager', 'manager')
+    .leftJoinAndSelect('leaveRequest.leaveType', 'leaveType')
+    .where('leaveRequest.status IN (:...statuses)', {
+      statuses: [LeaveStatus.APPROVED, LeaveStatus.CANCELLED],
+    })
+    .andWhere('manager.id = :managerId', { managerId })
+    .orderBy('leaveRequest.updated_at', 'DESC')
+    .getMany();
+
+  return leaveRequests.map(req => ({
+    id: req.id,
+    employee_name: req.user.name,
+    leave_type: req.leaveType.name,
+    start_date: req.startDate,
+    end_date: req.endDate,
+    updated_at: req.updatedAt,
+    status: req.status === LeaveStatus.APPROVED ? 'Approved' : 'Cancelled',
+  }));
+};
+
+
 // Create a new leave request
-const createLeaveRequest = async (userId,managerId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason, status, finalApprovalLevel, totalDays) => {
+const createLeaveRequest = async ({ userId, managerId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason, status, finalApprovalLevel, totalDays }) => {
   const leaveRequest = leaveRequestRepo.create({
     userId,
     managerId,
@@ -112,7 +135,7 @@ const getIncomingRequests = async (userId, userRole) => {
   if (userRole === 'admin') {
     query = query
       .leftJoinAndSelect('mgr.manager', 'hr')
-      .where('(lr.status = :pending AND u.role = :hrRole)', { pending: LeaveStatus.PENDING, hrRole: 'hr' })
+      .where('(lr.status = :pending AND u.managerId = :userId)', { pending: LeaveStatus.PENDING, userId })
       .orWhere('(lr.status = :pendingL3 AND hr.managerId = :userId)', { pendingL3: LeaveStatus.PENDING_L3, userId })
       .orWhere('(lr.status = :pendingL2 AND mgr.managerId = :userId)', { pendingL2: LeaveStatus.PENDING_L2, userId });
   }
@@ -142,6 +165,7 @@ module.exports = {
   getUsersOnLeaveToday,
   getTeamLeave,
   getLeaveHistoryByUserId,
+  getTeamRequestsHistoryByManagerId,
   createLeaveRequest,
   getLeaveRequestById,
   updateLeaveRequestStatus,

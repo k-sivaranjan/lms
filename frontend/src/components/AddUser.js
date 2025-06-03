@@ -15,12 +15,10 @@ function AddUser() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Handle form input changes
   const handleChange = ({ target: { name, value } }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { name, email, password, role, reportingManagerId } = formData;
@@ -64,6 +62,7 @@ function AddUser() {
           placeholder="Email"
           value={formData.email}
           onChange={handleChange}
+          autoComplete="off"
         />
         <input
           type="password"
@@ -71,6 +70,7 @@ function AddUser() {
           placeholder="Password"
           value={formData.password}
           onChange={handleChange}
+          autoComplete="off"
         />
         <input
           type="number"
@@ -86,6 +86,7 @@ function AddUser() {
           <option value="hr">HR</option>
         </select>
         <button type="submit">Create User</button>
+        <button type="button" onClick={()=>navigate("/add-many-users")}>Add Multiple Users</button>
       </form>
 
       {message && <p className="success-message">{message}</p>}

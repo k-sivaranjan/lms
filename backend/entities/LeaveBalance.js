@@ -1,6 +1,5 @@
 const { EntitySchema } = require("typeorm");
 
-// Schema for the LeaveBalance entity
 const LeaveBalance = new EntitySchema({
   name: "LeaveBalance",
   tableName: "leave_balances",
@@ -22,7 +21,8 @@ const LeaveBalance = new EntitySchema({
       type: Number,
     },
     balance: {
-      type: "float", 
+      type: "float",
+      nullable: true,
     },
     used: {
       type: "float",
@@ -32,13 +32,23 @@ const LeaveBalance = new EntitySchema({
     user: {
       type: "many-to-one",
       target: "User",
-      joinColumn: { name: "user_id" },
+      joinColumn: {
+        name: "user_id",
+        referencedColumnName: "id",
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
+      },
       inverseSide: "leaveBalances",
     },
     leaveType: {
       type: "many-to-one",
       target: "LeaveType",
-      joinColumn: { name: "leave_type_id" },
+      joinColumn: {
+        name: "leave_type_id",
+        referencedColumnName: "id",
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
+      },
       inverseSide: "leaveBalances",
     },
   },

@@ -1,8 +1,20 @@
 const { AppDataSource } = require('../config/db');
 const { LeaveBalance } = require('../entities/LeaveBalance');
+const { In } = require('typeorm');
 
 const leaveBalanceRepo = AppDataSource.getRepository(LeaveBalance);
 
+// Get all leave balances by allowed type
+const getLeaveBalancesByAllowedTypes = async ({userId, year, allowedLeaveTypeIds}) => {
+  return leaveBalanceRepo.find({
+    where: {
+      userId,
+      year,
+      leaveTypeId: In(allowedLeaveTypeIds),
+    },
+    relations: ['leaveType']
+  });
+};
 // Get all leave balances for a user in a specific year
 const getLeaveBalanceByUserAndYear = async (userId, year) => {
   return leaveBalanceRepo.find({ where: { userId, year }, relations: ['leaveType'] });
@@ -36,6 +48,7 @@ const createLeaveBalance = async (userId, leaveTypeId, year, balance, used = 0) 
 };
 
 module.exports = {
+  getLeaveBalancesByAllowedTypes,
   getLeaveBalanceByUserAndYear,
   updateLeaveBalance,
   updateLeaveBalanceByUserAndType,

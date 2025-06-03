@@ -1,13 +1,5 @@
 const { EntitySchema } = require("typeorm");
 
-const UserRole = {
-  ADMIN: 'admin',
-  HR: 'hr',
-  MANAGER: 'manager',
-  EMPLOYEE: 'employee',
-};
-
-//Schema for User entity
 const User = new EntitySchema({
   name: "User",
   tableName: "users",
@@ -15,7 +7,7 @@ const User = new EntitySchema({
     id: {
       type: Number,
       primary: true,
-      generated: true, 
+      generated: true,
     },
     name: {
       type: String,
@@ -27,19 +19,19 @@ const User = new EntitySchema({
     password: {
       type: String,
     },
-    role: {
-      type: "enum",
-      enum: UserRole, 
-      default: UserRole.EMPLOYEE,
-    },
     managerId: {
       name: "manager_id",
       type: Number,
-      nullable: true, 
+      nullable: true,
+    },
+    roleId: {
+      name: "role_id",
+      type: Number,
+      nullable: false,
     },
     created_at: {
       type: "timestamp",
-      default: () => "CURRENT_TIMESTAMP", 
+      default: () => "CURRENT_TIMESTAMP",
     },
   },
   relations: {
@@ -50,12 +42,23 @@ const User = new EntitySchema({
         name: "manager_id",
       },
       inverseSide: "directReports",
+      nullable: true,
     },
     directReports: {
       type: "one-to-many",
       target: "User",
       inverseSide: "manager",
     },
+
+    role: {
+      type: "many-to-one",
+      target: "Role",
+      joinColumn: {
+        name: "role_id",
+      },
+      nullable: false,
+    },
+
     leaveRequests: {
       type: "one-to-many",
       target: "LeaveRequest",
@@ -69,4 +72,4 @@ const User = new EntitySchema({
   },
 });
 
-module.exports = { User, UserRole };
+module.exports = { User };

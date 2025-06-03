@@ -12,8 +12,8 @@ const getAllUsers = async () => {
 };
 
 // Create a new user in the database
-const createUser = async (name, email, password, role, managerId) => {
-  return repoCreateUser(name, email, password, role, managerId);
+const createUser = async ({name, email, password, roleId, managerId}) => {
+  return repoCreateUser({name, email, password, roleId, managerId});
 };
 
 // Get a user by their email address

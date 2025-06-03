@@ -1,8 +1,10 @@
 const { DataSource } = require('typeorm') ;
 const dotenv = require('dotenv') ;
 const { User } = require('../entities/User') ;
+const { Role } = require('../entities/Role') ;
 const { LeaveType } = require('../entities/LeaveType') ;
 const { LeaveBalance } = require('../entities/LeaveBalance') ;
+const { LeavePolicy } = require('../entities/LeavePolicy') ;
 const { LeaveRequest } = require('../entities/LeaveRequest') ;
 
 dotenv.config();
@@ -15,9 +17,9 @@ const AppDataSource = new DataSource({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  synchronize: false,
+  synchronize:false,
   logging: false, 
-  entities: [User, LeaveType, LeaveBalance, LeaveRequest],
+  entities: [User,Role, LeaveType,LeavePolicy, LeaveBalance, LeaveRequest],
   migrations: ['src/migrations/**/*.ts'],
 });
 

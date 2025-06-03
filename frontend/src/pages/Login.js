@@ -14,7 +14,7 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await apiPostWithRetry('http://localhost:5000/api/auth/login', { email, password });
+      const res = await apiPostWithRetry('/auth/login', { email, password });
       login(res.data.user);
       localStorage.setItem('token', res.data.token);
       api.defaults.headers['Authorization'] = `Bearer ${res.data.token}`;

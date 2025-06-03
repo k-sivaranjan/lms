@@ -1,18 +1,26 @@
 const {
   getUsersOnLeaveToday,
   getTeamLeave,
-  getLeaveBalance,
-  getLeaveTypes,
+  getLeaveBalanceByType,
+  updateLeavePolicy,
   requestLeave,
+  getLeavePolicy,
+  getLeavePolicyByRole,
   getLeaveHistory,
+  getRequestsHistory,
   cancelLeave,
   getIncomingRequests,
   approveLeave,
   rejectLeave,
   addLeaveType,
+  addLeavePolicy,
   updateLeaveType,
   deleteLeaveType
 } = require('../models/leaveModel');
+
+const {
+  getUserById
+} = require('../models/userModel');
 
 // Fetch users who are on leave today
 const fetchUsersOnLeaveToday = async (req, res) => {
@@ -32,15 +40,15 @@ const fetchUsersOnLeaveToday = async (req, res) => {
 const fetchTeamLeave = async (req, res) => {
   try {
     const { teamMembers, month, year } = req.query;
-    
+
     if (!teamMembers || !month || !year) {
       return res.status(400).json({ error: 'Missing teamMembers, month, or year' });
     }
 
     const userIdArray = teamMembers.split(',').map(id => parseInt(id.trim()));
 
-    const leaveRequests = await getTeamLeave(userIdArray, month, year);
-    
+    const leaveRequests = await getTeamLeave({userIdArray, month, year});
+
     res.json({ leaveRequests });
   } catch (error) {
     console.error('Error fetching team leave requests:', error);
@@ -53,39 +61,122 @@ const fetchLeaveBalance = async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
     const currentYear = new Date().getFullYear();
-    const balance = await getLeaveBalance(userId, currentYear);
 
-    if (balance.length === 0) {
+    const user = await getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const leavePolicies = await getLeavePolicyByRole(user.roleId);
+    const allowedLeaveTypeIds = leavePolicies.map(p => p.leaveType.id);
+
+    if (allowedLeaveTypeIds.length === 0) {
+      return res.status(403).json({ error: 'This role has no leave types assigned.' });
+    }
+
+  const leaveBalances = await getLeaveBalanceByType({userId, year:currentYear, allowedLeaveTypeIds});
+
+    if (leaveBalances.length === 0) {
       return res.status(404).json({ error: 'No leave balance found for the current year.' });
     }
 
     let totalBalance = 0, totalLeaves = 0;
-    const leaveDetails = balance.map(item => {
+    const leaveDetails = leaveBalances.map(item => {
+      const maxPerYear = item.leaveType?.maxPerYear;
+      const total = item.balance + item.used;
+
       totalBalance += item.balance;
-      totalLeaves += (item.balance + item.used);
+      totalLeaves += total;
+
       return {
-        leave_type: item.leaveType.name,
-        total: item.balance + item.used,
+        leave_id: item.leaveTypeId,
+        leave_type: item.leaveType?.name || 'Unknown',
+        total,
         balance: item.balance,
-        used: item.used
+        used: item.used,
+        maxPerYear
       };
     });
 
-    res.json({ totalBalance, totalLeaves, leaveDetails });
+    res.json({ role: user.role.name, totalBalance, totalLeaves, leaveDetails });
+
   } catch (error) {
     console.error('Fetch leave balance error:', error);
     res.status(500).json({ error: 'Failed to fetch leave balance' });
   }
 };
 
+//Fetch Leave Types By Role
+const fetchLeaveTypesByRole = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const user = await getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const leavePolicies = await getLeavePolicyByRole(user.roleId);
+    const leaveTypes = leavePolicies.map(leave => ({
+      id: leave.leaveType.id,
+      name: leave.leaveType.name
+    }));
+
+    res.json(leaveTypes);
+
+  } catch (error) {
+    console.error('Error in fetchLeaveTypesByRole:', error);
+    res.status(500).json({ error: 'Failed to fetch leave types by role' });
+  }
+};
+
 // Fetch all available leave types
 const fetchLeaveTypes = async (req, res) => {
   try {
-    const leaveTypes = await getLeaveTypes();
-    if (!leaveTypes || leaveTypes.length === 0) {
-      return res.status(404).json({ error: 'No leave types found.' });
+    const leavePolicies = await getLeavePolicy();
+
+    if (!leavePolicies || leavePolicies.length === 0) {
+      return res.status(404).json({ error: 'No leave policies found.' });
     }
-    res.json(leaveTypes);
+
+    const grouped = {};
+
+    leavePolicies.forEach(policy => {
+      const {
+        leaveTypeId,
+        leaveTypeName,
+        maxPerYear,
+        multiApprover,
+        accrualPerYear,
+        maxApplicableRoleId,
+        applicableFromRole
+      } = policy;
+
+      const existing = grouped[leaveTypeId];
+
+      if (!existing || maxApplicableRoleId > existing.maxRoleId) {
+        grouped[leaveTypeId] = {
+          leaveTypeId,
+          leaveName: leaveTypeName,
+          maxPerYear,
+          multiApprover,
+          accrualPerYear,
+          applicableFromRole,
+          maxRoleId: maxApplicableRoleId,
+        };
+      }
+    });
+
+    const formattedLeaveTypes = Object.values(grouped).map(item => ({
+      leaveTypeId: item.leaveTypeId,
+      leaveName: item.leaveName,
+      maxPerYear: item.maxPerYear,
+      multiApprover: item.multiApprover,
+      accrualPerYear: item.accrualPerYear,
+      applicableFromRole: item.applicableFromRole,
+      maxRoleId: item.maxRoleId
+    }));
+
+    res.json(formattedLeaveTypes);
+
   } catch (error) {
     console.error('Fetch leave types error:', error);
     res.status(500).json({ error: 'Failed to fetch leave types' });
@@ -95,24 +186,32 @@ const fetchLeaveTypes = async (req, res) => {
 // Request a leave
 const requestLeaveHandler = async (req, res) => {
   try {
-    const { userId,managerId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason,totalDays } = req.body;
-   
-    const result = await requestLeave(
-      userId, 
+    const {
+      userId,
       managerId,
-      leaveTypeId, 
-      startDate, 
-      endDate, 
-      isHalfDay, 
-      halfDayType, 
+      leaveTypeId,
+      startDate,
+      endDate,
+      isHalfDay,
+      halfDayType,
       reason,
       totalDays
-    );
+    } = req.body;
+
+    if (
+      !userId || !managerId || !leaveTypeId || !startDate || !endDate ||
+      totalDays == null || isHalfDay == null
+    ) {
+      return res.status(400).json({ error: 'Missing required fields in request body' });
+    }
+
+    const result = await requestLeave({userId,managerId,leaveTypeId,startDate,endDate,isHalfDay,halfDayType,reason,totalDays});
 
     res.status(201).json({ message: 'Leave requested successfully', result });
+
   } catch (err) {
-    console.error('Request leave error:', err);
-    res.status(400).json({ error: err instanceof Error ? err.message : 'An error occurred' });
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({ error: err.message });
   }
 };
 
@@ -127,6 +226,18 @@ const getLeaveHistoryHandler = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+//Get Requests History
+const getRequestsHistoryHandler = async (req,res)=>{
+  try {
+    const userId = parseInt(req.params.userId);
+    const requestsHistory = await getRequestsHistory(userId);
+    res.status(200).json({ requestsHistory });
+  } catch (err) {
+    console.error('Get leave history error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
 
 // Cancel a leave request
 const cancelLeaveHandler = async (req, res) => {
@@ -145,6 +256,7 @@ const getIncomingRequestsHandler = async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
     const requests = await getIncomingRequests(userId);
+
     res.status(200).json({ incomingRequests: requests });
   } catch (err) {
     console.error('Get incoming requests error:', err);
@@ -179,11 +291,12 @@ const rejectLeaveHandler = async (req, res) => {
 // Create a new leave type
 const createLeaveHandler = async (req, res) => {
   try {
-    const { name, maxPerYear, multiApprover } = req.body;
-    const result = await addLeaveType(name, maxPerYear, multiApprover);
+    const { name, maxPerYear, multiApprover,accrual_per_year,roleId } = req.body;
+    const result = await addLeaveType({name, maxPerYear, multiApprover});
+    
+    const result1 = await addLeavePolicy({id:result.id,accrual_per_year,roleId})
     res.status(200).json({ message: 'Leave type added successfully', result });
   } catch (err) {
-    console.error('Create leave type error:', err);
     res.status(500).json({ error: 'Failed to add leave type' });
   }
 };
@@ -192,9 +305,11 @@ const createLeaveHandler = async (req, res) => {
 const updateLeaveHandler = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const { name, maxPerYear, multiApprover } = req.body;
-    const result = await updateLeaveType(id, name, maxPerYear, multiApprover);
-    res.status(200).json({ message: 'Leave type updated successfully', result });
+  
+    const { name, maxPerYear, multiApprover ,accrual_per_year,roleId} = req.body;
+    const result = await updateLeaveType({id, name, maxPerYear, multiApprover});
+    const result1 = await updateLeavePolicy({id,accrual_per_year,roleId})
+    res.status(200).json({ message: 'Leave type updated successfully', result,result1 });
   } catch (err) {
     console.error('Update leave type error:', err);
     res.status(500).json({ error: 'Failed to update leave type' });
@@ -217,8 +332,10 @@ module.exports = {
   fetchUsersOnLeaveToday,
   fetchTeamLeave,
   fetchLeaveBalance,
+  fetchLeaveTypesByRole,
   fetchLeaveTypes,
   requestLeaveHandler,
+  getRequestsHistoryHandler,
   getLeaveHistoryHandler,
   cancelLeaveHandler,
   getIncomingRequestsHandler,

@@ -48,7 +48,6 @@
   cursor: pointer;
   font-size: 14px;
   margin-right: 8px;
-  transition: background-color 0.3s ease-in-out;
 }
 
 .cancel-button:hover {
@@ -63,7 +62,6 @@
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
-  transition: background-color 0.3s ease-in-out;
 }
 
 .view-button:hover {
@@ -112,4 +110,78 @@
 
 .close-button:hover {
   background-color: #626e70;
+}
+
+@media (max-width: 768px) {
+  .leave-history-title {
+    font-size: 18px;
+    text-align: center;
+  }
+
+  .leave-history-table th,
+  .leave-history-table td {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .cancel-button,
+  .view-button {
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+
+  .modal {
+    width: 90%;
+    padding: 15px;
+  }
+
+  .modal h4 {
+    font-size: 16px;
+  }
+
+  .modal p {
+    font-size: 14px;
+  }
+
+  .close-button {
+    padding: 5px 10px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .leave-history-title {
+    font-size: 16px;
+  }
+
+  .leave-history-table {
+    font-size: 12px;
+    overflow-x: auto;
+    display: block;
+  }
+
+  .leave-history-table th,
+  .leave-history-table td {
+    font-size: 12px;
+    padding: 6px;
+  }
+
+  .cancel-button,
+  .view-button,
+  .close-button {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  .modal {
+    padding: 12px;
+  }
+
+  .modal h4 {
+    font-size: 15px;
+  }
+
+  .modal p {
+    font-size: 13px;
+  }
 }

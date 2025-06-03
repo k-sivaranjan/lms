@@ -7,8 +7,6 @@ const leaveTypes = [
     { id: 1, name: "Casual Leave", maxPerYear: 12, multiApprover: 1 },
     { id: 2, name: "Sick Leave", maxPerYear: 10, multiApprover: 1 },
     { id: 3, name: "Paid Leave", maxPerYear: 15, multiApprover: 2 },
-    { id: 4, name: "Maternity Leave", maxPerYear: 90, multiApprover: 3 },
-    { id: 5, name: "Paternity Leave", maxPerYear: 15, multiApprover: 3 },
     { id: 9, name: "Emergency Leave", maxPerYear: 0, multiApprover: 0 },
     { id: 10, name: "Loss of Pay", maxPerYear: 0, multiApprover: 1 }
   ];
@@ -23,7 +21,7 @@ async function seedLeaveTypes() {
 
         console.log('Leave Types data seeded successfully!');
     } else {
-        console.log('Data already exist. Skipping Leave Types seeding...');
+        console.log('Data exist. Skipping Leave Types seeding..');
     }
 }
 

@@ -1,13 +1,13 @@
 const { EntitySchema } = require("typeorm");
 
 const LeaveStatus = {
-  PENDING: 'Pending',
-  PENDING_L1: 'Pending (L1)',
-  PENDING_L2: 'Pending (L2)',
-  PENDING_L3: 'Pending (L3)',
-  APPROVED: 'Approved',
-  REJECTED: 'Rejected',
-  CANCELLED: 'Cancelled',
+  PENDING: 1,
+  PENDING_L1: 2,
+  PENDING_L2: 3,
+  PENDING_L3: 4,
+  APPROVED: 5,
+  REJECTED: 6,
+  CANCELLED: 7,
 };
 
 const HalfDayType = {
@@ -15,7 +15,6 @@ const HalfDayType = {
   SECOND_HALF: 'PM',
 };
 
-// Schema for the LeaveRequest entity
 const LeaveRequest = new EntitySchema({
   name: "LeaveRequest",
   tableName: "leave_requests",
@@ -61,8 +60,7 @@ const LeaveRequest = new EntitySchema({
       nullable: true,
     },
     status: {
-      type: "enum",
-      enum: LeaveStatus,
+      type: "int",
       default: LeaveStatus.PENDING,
     },
     finalApprovalLevel: {
@@ -81,6 +79,13 @@ const LeaveRequest = new EntitySchema({
       type: "timestamp",
       default: () => "CURRENT_TIMESTAMP",
     },
+    updatedAt: {
+      name: "updated_at",
+      type: "timestamp",
+      default: () => "CURRENT_TIMESTAMP",
+      onUpdate: "CURRENT_TIMESTAMP",
+    },
+
   },
   relations: {
     user: {
@@ -88,6 +93,7 @@ const LeaveRequest = new EntitySchema({
       target: "User",
       joinColumn: { name: "user_id" },
       inverseSide: "leaveRequests",
+      onDelete: "CASCADE",
     },
     leaveType: {
       type: "many-to-one",

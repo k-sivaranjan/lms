@@ -1,8 +1,11 @@
 const { AppDataSource } = require('../config/db');
 const { User } = require('../entities/User');
-const userRepo = AppDataSource.getRepository(User);
 const { LeaveType } = require('../entities/LeaveType');
-const { LeaveBalance } = require('../entities/LeaveBalance')
+const { LeaveBalance } = require('../entities/LeaveBalance');
+const bcrypt = require('bcrypt');
+require('dotenv').config();
+
+const userRepo = AppDataSource.getRepository(User);
 const leaveBalanceRepo = AppDataSource.getRepository(LeaveBalance);
 const leaveTypeRepo = AppDataSource.getRepository(LeaveType);
 
@@ -47,7 +50,6 @@ const users = [
     managerId: 4,
     created_at: '2025-04-17 09:32:48'
   },
-  
   {
     name: 'hr1',
     email: 'hr1@gmail.com',
@@ -61,16 +63,19 @@ const users = [
 async function seedUsers() {
   const existingUsers = await userRepo.find();
   if (existingUsers.length > 0) {
-    console.log('Users already exist. Skipping users seeding...');
+    console.log('Data exist. Skipping users seeding..');
     return;
   }
 
   const savedUsersMap = {};
-  for (const { managerId, ...userData } of users) {
-    const user = userRepo.create(userData);
+
+  for (const { managerId, password, ...userData } of users) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = userRepo.create({ ...userData, password: hashedPassword });
     const savedUser = await userRepo.save(user);
     savedUsersMap[savedUser.email] = savedUser;
   }
+
   for (const userData of users) {
     if (userData.managerId !== null) {
       const user = await userRepo.findOneBy({ email: userData.email });
@@ -99,6 +104,5 @@ async function seedUsers() {
 
   console.log('User data and leave balances seeded successfully!');
 }
-
 
 module.exports = seedUsers;

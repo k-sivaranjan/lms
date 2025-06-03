@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useUser } from '../userContext';
+import {useNavigate} from "react-router-dom";
 import api from "../api";
 import '../styles/profile.css';
 
 function Profile() {
-    const navigate = useNavigate()
     const { user } = useUser();
+    const navigate = useNavigate();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [message, setMessage] = useState('');
@@ -43,7 +43,7 @@ function Profile() {
             </div>
             <div className="profile-field">
                 <label>Role:</label>
-                <input type="text" value={user.role} readOnly />
+                <input type="text" value={user.role.name} readOnly />
             </div>
             <div className="profile-field">
                 <label>New Password:</label>

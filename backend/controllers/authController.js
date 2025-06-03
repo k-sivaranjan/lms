@@ -8,10 +8,21 @@ const { getAllUsers, createUser, getUserByEmail, updatePasswordByid } = require(
 dotenv.config();
 const SECRET_KEY = process.env.JWT_SECRET;
 
-// Register a new user
+const roleEnum = {
+  admin: 1,
+  hr: 2,
+  manager: 3,
+  employee: 4,
+};
+
 const register = async (req, res) => {
   try {
-    const { name, email, password, role, reportingManagerId } = req.body;
+    let { name, email, password, role, reportingManagerId } = req.body;
+
+    const roleId = roleEnum[role.toLowerCase()];
+    if (!roleId) {
+      return res.status(400).json({ error: 'Invalid role specified' });
+    }
 
     const existingUser = await getUserByEmail(email);
     if (existingUser) {
@@ -19,14 +30,14 @@ const register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    await createUser(name, email, hashedPassword, role, reportingManagerId);
+    await createUser({name, email, password: hashedPassword, roleId, managerId: reportingManagerId});
     res.status(201).json({ message: 'User Added successfully' });
   } catch (err) {
     console.error('Registration error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 // Login an existing user
 const login = async (req, res) => {
@@ -37,19 +48,18 @@ const login = async (req, res) => {
     if (!user) {
       return res.status(400).json({ error: 'Invalid email or password' });
     }
-
+ 
     const isPasswordMatch = await bcrypt.compare(password, user.password); 
-    
-    if (!isPasswordMatch) {
+    if (isPasswordMatch) {
       return res.status(400).json({ error: 'Invalid email or password' });
     }
  
     const payload = {
       id: user.id,
       email: user.email,
-      role: user.role,
+      role: user.role.name,
     };
-
+   
     const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
 
     res.status(200).json({ message: 'Login successful', user, token });

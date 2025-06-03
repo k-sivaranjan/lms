@@ -2,6 +2,9 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 
+const cron = require("node-cron");
+const applyLeavePolicyJob = require("./utils/applyLeavePolicies");
+
 const seedUsers = require('./seeds/userSeeder');
 const seedLeaveTypes = require('./seeds/leaveTypeSeeder');
 const authRoutes = require('./routes/authRoutes');
@@ -23,6 +26,12 @@ initializeDatabase().then(async () => {
   await seedLeaveTypes();
   await seedUsers();
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+  console.log("Cron scheduler initialized");
+
+  cron.schedule("0 0 1 1 *", async () => {
+    await applyLeavePolicyJob();
+  });
 }).catch((err) => {
   console.error('Failed to initialize database:', err);
 });

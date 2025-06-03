@@ -21,7 +21,7 @@ const retryRequest = async (request, retries = 3, delay = 1000) => {
 };
 
 export const apiPostWithRetry = async (url, data) => {
-  return retryRequest(() => axios.post(url, data));
+  return retryRequest(() => api.post(url, data));
 };
 
 export default api;

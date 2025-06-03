@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import api from "../api"
-import { useUser } from '../userContext';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../userContext';
+import api from "../api";
 import '../styles/request.css';
 
-function LeaveRequest({ onRequestSuccess }) {
+function LeaveRequest() {
   const { user } = useUser();
   const navigate = useNavigate();
 
+  const [leaveDetails, setLeaveDetails] = useState([]);
   const [leaveTypeId, setLeaveTypeId] = useState('');
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [startDate, setStartDate] = useState('');
@@ -15,47 +16,69 @@ function LeaveRequest({ onRequestSuccess }) {
   const [isHalfDay, setIsHalfDay] = useState(false);
   const [halfDayType, setHalfDayType] = useState('');
   const [reason, setReason] = useState('');
-  const [totalDays,setTotalDays] = useState('')
+  const [totalDays, setTotalDays] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch leave types when the component mounts
   useEffect(() => {
-    api.get('/leave/types')
-      .then((res) => setLeaveTypes(res.data))
-      .catch((err) => console.error('Error fetching leave types:', err));
-  }, []);
+    fetchBalance();
+    fetchLeaveTypes();
+  }, [user]);
 
+  const fetchLeaveTypes = async () => {
+    try {
+      const res = await api.get(`/leave/types/${user.id}`);
+      setLeaveTypes(res.data);
+    } catch (err) {
+      console.error('Error fetching leave types:', err);
+    }
+  };
+
+  const fetchBalance = async () => {
+    if (!user || user.role.name === "admin") return;
+    try {
+      const res = await api.get(`/leave/balance/${user.id}`);
+      setLeaveDetails(res.data.leaveDetails);
+    } catch {
+      setError('Error fetching leave balance');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate leave days
   useEffect(() => {
     const calculateLeaveDays = () => {
       if (!startDate || !endDate) {
         setTotalDays(0);
         return;
       }
-  
+
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (end < start) {
         setTotalDays(0);
         return;
       }
-  
+
       let dayCount = 0;
       let current = new Date(start);
       while (current <= end) {
-        const dayOfWeek = current.getDay(); // 0 = Sunday, 6 = Saturday
+        const dayOfWeek = current.getDay();
         if (dayOfWeek !== 0 && dayOfWeek !== 6) {
           dayCount++;
         }
         current.setDate(current.getDate() + 1);
       }
-  
+
       setTotalDays(isHalfDay ? 0.5 : dayCount);
     };
-  
+
     calculateLeaveDays();
   }, [startDate, endDate, isHalfDay]);
-  
 
-  // Handle form submission
+  const selectedBalance = leaveDetails.find(b => b.leave_id === parseInt(leaveTypeId));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -72,7 +95,7 @@ function LeaveRequest({ onRequestSuccess }) {
     try {
       const res = await api.post('/leave/request', {
         userId: user.id,
-        managerId:user.managerId,
+        managerId: user.managerId,
         leaveTypeId,
         startDate,
         endDate,
@@ -89,25 +112,17 @@ function LeaveRequest({ onRequestSuccess }) {
       }
 
       alert('Leave requested successfully');
-      onRequestSuccess?.();
 
+      // Reset form
       setLeaveTypeId('');
       setStartDate('');
       setEndDate('');
       setIsHalfDay(false);
       setHalfDayType('');
       setReason('');
-
-      navigate('/');
-
+      navigate("/");
     } catch (err) {
-      console.error('Error submitting leave request:', err);
-
-      if (err.response && err.response.data && err.response.data.error) {
-        console.log(err.response.data.error);
-      } else {
-        alert('Error submitting leave request');
-      }
+      alert(err.response?.data?.error || "Error submitting leave request.");
     }
   };
 
@@ -128,12 +143,24 @@ function LeaveRequest({ onRequestSuccess }) {
         ))}
       </select>
 
+      {leaveTypeId && selectedBalance && (
+        <p className="leave-request-balance">
+          You have <span className='leave'>{selectedBalance.balance} days</span> balance for {selectedBalance.leave_type}
+        </p>
+      )}
+
       <label className="leave-request-label">Start Date:</label>
       <input
         className="leave-request-input"
         type="date"
         value={startDate}
-        onChange={(e) => setStartDate(e.target.value)}
+        onChange={(e) => {
+          const selected = e.target.value;
+          setStartDate(selected);
+          if (!endDate || new Date(endDate) < new Date(selected)) {
+            setEndDate(selected);
+          }
+        }}
         required
       />
 
@@ -144,6 +171,7 @@ function LeaveRequest({ onRequestSuccess }) {
         value={endDate}
         min={startDate}
         onChange={(e) => setEndDate(e.target.value)}
+        disabled={!startDate}
         required
       />
 
@@ -184,7 +212,6 @@ function LeaveRequest({ onRequestSuccess }) {
       <p className="leave-request-days">
         Total Leave Days: {totalDays}
       </p>
-
 
       <div className="leave-request-button-container">
         <button className="leave-request-submit-btn" type="submit">Submit Request</button>

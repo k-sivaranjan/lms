@@ -39,3 +39,28 @@
   color: green;
   margin-top: 10px;
 }
+
+@media (max-width: 480px) {
+  .profile-container {
+    max-width: 95%;
+    margin: 20px auto;
+    padding: 15px;
+  }
+
+  .profile-field input {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .update-btn {
+    width: 100%;
+    padding: 10px 0;
+    font-size: 16px;
+    margin-left: 0;
+    margin-top: 15px;
+  }
+
+  .message {
+    font-size: 14px;
+  }
+}
