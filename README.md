@@ -1,53 +1,127 @@
 # Leave Management System
 
-A Leave Management System built with **React**, **Node.js**, **Express**, and **MySQL**. It supports multiple user roles: **Employee**, **Manager**, **HR**, and **Admin**, and includes leave request,multi level approval,leave balance, and management functionalities.
+A Leave Management System built with **React**, **Node.js**, **Express**, and **MySQL**. It supports **multi-role architecture**: **Employee**, **Manager**, **HR**, and **Admin**, with features like multi-level approvals, real-time calendar view of team leaves, Redis queueing for bulk operations, and detailed leave policies and balances.
+
+---
 
 ## 🚀 Features
 
 ### 👥 User Roles
-- **Employee , Manager , HR**: Request leave, view leave balance and history, cancel leave.
-- **Manager , HR**: Approve or reject leave requests from team members.
-- **Admin**: Monitor and manage overall leave requests. Add users, manage leave types and policies, track current absentees.Approve/Reject leaves for certain criterias.
+
+- **Employee, Manager, HR**:
+  - Submit leave requests
+  - View leave balance and history
+  - Cancel leaves
+  - Change their password
+- **Manager, HR**:
+  - View incoming leave requests from their team
+  - Approve or reject leave requests
+  - View team leave calendar
+- **Admin**:
+  - Full access to leave requests and approvals
+  - Manage users and leave types/policies
+  - View who's on leave today
+  - Upload users in bulk using Redis and Bull
+  - Approve/Reject as per special criteria
+
+---
+
+## 📅 Functional Modules
+
+- ✅ Multi-level leave approval workflow
+- 📊 Accurate leave balance tracking with used, remaining, and max limits
+- ❌ Overlapping leave prevention
+- 📦 Bulk user upload with Redis + Bull
+- 📆 Calendar UI to visualize team leave status
+- 🔐 Password update capability
+- 🧭 Role-based access control with middleware
+- 🔁 Reusable Express middleware for authentication and role checking
+
+---
+
+## 🧩 Database Schema Overview
+
+- `users` – User details
+- `roles` – Defines available roles
+- `leave_requests` – Leave submissions
+- `leave_approvals` – Tracks each level of approval
+- `leave_types` – Types of leaves
+- `leave_policies` – Policy metadata
+- `leave_balances` – Tracks current leave balances and used leaves per user
 
 ---
 
 ## 📦 API Routes
 
-### 👤 User Management
-- `GET /users` - Fetch all users
-- `POST /register` - Add a new user
-- `POST /login` - Login as a user
+### 🔐 Authentication & Users
 
-### 📅 Leave Requests
-- `POST /api/leave/request` - Submit a leave request
-- `PUT /api/leave/cancel/:leaveRequestId` - Cancel a leave request
-- `GET /api/leave/history/:userId` - Get leave history of a user
+- `POST /login` – Login as a user
+- `POST /register` – [Admin only] Register a new user
+- `GET /users` – [Admin only] Fetch all users
+- `POST /upload-users` – [Admin only] Bulk upload users using Excel + Redis
+- `PUT /password/:userId` – Update user password
+
+---
+
+### 📝 Leave Requests
+
+- `POST /request` – Submit a leave request
+- `PUT /cancel/:leaveRequestId` – Cancel a submitted leave
+- `GET /history/:userId` – Get leave history for a user
+- `GET /requests/history/:userId` – Get all requests submitted by the user
+
+---
 
 ### 📊 Leave Balance
-- `GET /api/leave/balance/:userId` - Get current leave balance for a user
+
+- `GET /balance/:userId` – Get leave balance for a specific user
+
+---
 
 ### ✅ Leave Approvals
-- `GET /api/leave/requests/:userId` - Get incoming leave requests (for manager/HR/Admin)
-- `PUT /api/leave/approve/:approveId` - Approve a leave request
-- `PUT /api/leave/reject/:rejectId` - Reject a leave request
 
-### 📌 Leave Types & Policy Management (Admin)
-- `GET /api/leave/types` - Fetch all leave types
-- `POST /api/leave/types` - Create a new leave type
-- `PUT /api/leave/types/:id` - Update an existing leave type
-- `DELETE /api/leave/types/:id` - Delete a leave type
+- `GET /requests/:userId` – View incoming leave requests (Manager, HR, Admin)
+- `PUT /approve/:approveId` – Approve a pending leave
+- `PUT /reject/:rejectId` – Reject a pending leave
 
-### 📍 Attendance Tracking
-- `GET /api/leave/on-leave-today` - Fetch users who are on leave today
+---
 
-### 👥 Team View
-- `GET /api/leave/team-leaves` - Fetch leave status of your team
+### 🗂️ Leave Types & Policy Management
 
-## 🛠️ Tech Stack
+- `GET /types/:userId` – Fetch leave types applicable to the user’s role
+- `GET /types` – Fetch all leave types
+- `POST /types` – [Admin only] Create a new leave type
+- `PUT /types/:id` – [Admin only] Update a leave type
+- `DELETE /types/:id` – [Admin only] Delete a leave type
 
-- **Frontend**: React JS
-- **Backend**: Node.js + Express.js
-- **Database**: MySQL
-- **ORM**: TypeORM
+---
+
+### 🗓️ Admin & Team
+
+- `GET /on-leave-today` – [Admin only] List users on leave today
+- `GET /team-leaves` – View team leave status in a calendar-style view
+
+---
+
+## 🧪 Tech Stack
+
+### 💻 Frontend
+- **React.js**
+- React Router for navigation
+- Recharts for charts
+- Custom calendar and dashboard components
+
+### 🖥️ Backend
+- **Node.js** + **Express.js**
+- MySQL + TypeORM (ORM)
+- Redis + Bull for queueing (bulk uploads)
+- Role-based access control
+- Middleware-based authentication using JWT
+
+### 🗃️ Database
+- **MySQL**:
+  - Normalized structure
+  - Support for multi-approver workflows
+  - Optimized indexes and relations
 
 ---
