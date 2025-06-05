@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useUser } from '../userContext';
-import api from "../api";
+import { useState, useEffect } from 'react';
+import { useUser } from '../utils/userContext';
+import {Toast} from "./Toast"
+import api from "../utils/api";
 import '../styles/calendar.css';
 
 function Calendar () {
@@ -34,16 +35,18 @@ function Calendar () {
   const fetchAllUsersinTeam = async () => {
     try {
       const res = await api.get('/auth/users');
+      
       const currentManagerId = user.id;
       let teamMembers;
       if (user.role.name !== 'admin') {
-        teamMembers = res.data.users.filter(u => u.managerId === currentManagerId);
+        teamMembers = res.data.data.users.filter(u => u.managerId === currentManagerId);
       } else {
-        teamMembers = res.data.users;
+        teamMembers = res.data.data.users;
       }
       setTeamMembers(teamMembers);
     } catch (error) {
       console.error("Error fetching users:", error);
+      Toast.error("Error fetching users")
     }
   };
 
@@ -60,6 +63,7 @@ function Calendar () {
       return response.data.leaveRequests;
     } catch (error) {
       console.error("Error fetching team leave data:", error);
+      Toast.error("Error fetching team leave data")
       return [];
     }
   };
@@ -88,6 +92,7 @@ function Calendar () {
         setTeamLeaveData(data || []);
       } catch (error) {
         console.error("Error fetching team leave data:", error);
+        Toast.error("Error fetching team leave data")
       } finally {
         setLoading(false);
       }

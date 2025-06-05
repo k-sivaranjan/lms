@@ -6,6 +6,7 @@ const { LeaveType } = require('../entities/LeaveType') ;
 const { LeaveBalance } = require('../entities/LeaveBalance') ;
 const { LeavePolicy } = require('../entities/LeavePolicy') ;
 const { LeaveRequest } = require('../entities/LeaveRequest') ;
+const { LeaveApproval } = require('../entities/LeaveApproval');
 
 dotenv.config();
 
@@ -19,7 +20,7 @@ const AppDataSource = new DataSource({
   database: process.env.DB_NAME,
   synchronize:false,
   logging: false, 
-  entities: [User,Role, LeaveType,LeavePolicy, LeaveBalance, LeaveRequest],
+  entities: [User,Role, LeaveType,LeavePolicy,LeaveApproval, LeaveBalance, LeaveRequest],
   migrations: ['src/migrations/**/*.ts'],
 });
 

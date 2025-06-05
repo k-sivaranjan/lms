@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useUser } from '../userContext';
-import api from "../api";
+import { useState, useEffect } from 'react';
+import { useUser } from '../utils/userContext';
+import api from "../utils/api";
 
 function AllUsers() {
     const [usersOnLeaveToday, setUsersOnLeaveToday] = useState([]);
@@ -16,7 +16,7 @@ function AllUsers() {
 
     const fetchAllUsers = async () => {
         const res = await api.get('/auth/users');
-        setAllUsers(res.data.users);
+        setAllUsers(res.data.data.users);
     };
     const fetchUsersOnLeaveToday = async () => {
         const res = await api.get('/leave/on-leave-today');

@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useUser } from '../userContext';
+import { useUser } from '../utils/userContext';
+import "../styles/navbar.css"
 
 function Navbar() {
   const { user, logout } = useUser();

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
-import api from "../api";
+import api from "../utils/api";
 import '../styles/admin.css';
 
 function Admin({ user}) {
@@ -9,7 +9,6 @@ function Admin({ user}) {
   const [totalUsers, setTotalUsers] = useState(0);
   const [leaveUsers, setLeaveUsers] = useState(0);
 
-  // Fetch admin requests and users on leave when the component mounts
   useEffect(() => {
     if (user) {
       fetchUsersOnLeaveToday();
@@ -17,7 +16,6 @@ function Admin({ user}) {
     }
   }, [user]);
 
-  //Fetch all users who are currently on leave today
   const fetchUsersOnLeaveToday = async () => {
     const res = await api.get('/leave/on-leave-today');
     if (!res.data) {
@@ -29,10 +27,10 @@ function Admin({ user}) {
     }
   };
 
-  //Fetching all users
   const fetchAllUsers = async () => {
     const res = await api.get('/auth/users');
-    setTotalUsers(res.data.count);
+    
+    setTotalUsers(res.data.data.count);
   };
 
   return (
@@ -65,7 +63,7 @@ function Admin({ user}) {
                 outerRadius={80}
                 dataKey="value"
                 minAngle={1}
-                label={({ name, percent }) => `${(percent * 100).toFixed(1)}%`}
+                label={({percent }) => `${(percent * 100).toFixed(1)}%`}
               >
                 <Cell fill="#ff6384" />
                 <Cell fill="#36a2eb" />

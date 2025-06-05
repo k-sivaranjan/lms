@@ -9,6 +9,21 @@
   color: #333;
 }
 
+.scrollable-table {
+  max-height: 370px;
+  overflow-y: auto;
+  position: relative;
+  border: 1px solid #ddd;
+}
+
+.leave-history-table thead th {
+  position: sticky;
+  top: 0;
+  background-color: #f4f4f4; /* same as your current header bg */
+  z-index: 10; /* Make sure it stays on top */
+  box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); /* subtle shadow */
+}
+
 .leave-history-table {
   width: 100%;
   border-collapse: collapse;

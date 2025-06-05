@@ -14,50 +14,50 @@ const users = [
     name: 'admin1',
     email: 'admin1@gmail.com',
     password: 'admin1password',
-    role: 'admin',
+    roleId: 1,
     managerId: null,
-    created_at: '2025-04-18 10:56:42'
+    created_at: null
   },
   {
     name: 'manager1',
     email: 'manager1@gmail.com',
     password: 'manager1password',
-    role: 'manager',
+    roleId: 3,
     managerId: 6,
-    created_at: '2025-04-16 17:59:21'
+    created_at: null
   },
   {
     name: 'user1',
     email: 'user1@gmail.com',
     password: 'user1password',
-    role: 'employee',
+    roleId: 4,
     managerId: 2,
-    created_at: '2025-04-16 18:02:02'
+    created_at: null
   },
   {
     name: 'manager2',
     email: 'manager2@gmail.com',
     password: 'manager2password',
-    role: 'manager',
+    roleId: 3,
     managerId: 6,
-    created_at: '2025-04-17 09:30:20'
+    created_at: null
   },
   {
     name: 'user2',
     email: 'user2@gmail.com',
     password: 'user2password',
-    role: 'employee',
+    roleId: 4,
     managerId: 4,
-    created_at: '2025-04-17 09:32:48'
+    created_at: null
   },
   {
     name: 'hr1',
     email: 'hr1@gmail.com',
     password: 'hr1password',
-    role: 'hr',
+    roleId: 2,
     managerId: 1,
-    created_at: '2025-04-21 15:09:55'
-  },
+    created_at: null
+  }
 ];
 
 async function seedUsers() {
@@ -71,7 +71,11 @@ async function seedUsers() {
 
   for (const { managerId, password, ...userData } of users) {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = userRepo.create({ ...userData, password: hashedPassword });
+    const user = userRepo.create({
+      ...userData,
+      password: hashedPassword,
+      created_at: new Date(),
+    });
     const savedUser = await userRepo.save(user);
     savedUsersMap[savedUser.email] = savedUser;
   }

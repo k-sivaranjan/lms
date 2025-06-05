@@ -7,8 +7,8 @@ const leaveTypes = [
     { id: 1, name: "Casual Leave", maxPerYear: 12, multiApprover: 1 },
     { id: 2, name: "Sick Leave", maxPerYear: 10, multiApprover: 1 },
     { id: 3, name: "Paid Leave", maxPerYear: 15, multiApprover: 2 },
-    { id: 9, name: "Emergency Leave", maxPerYear: 0, multiApprover: 0 },
-    { id: 10, name: "Loss of Pay", maxPerYear: 0, multiApprover: 1 }
+    { id: 9, name: "Emergency Leave", maxPerYear: 5, multiApprover: 0 },
+    { id: 10, name: "Loss of Pay", maxPerYear: null, multiApprover: 1 }
   ];
   
 async function seedLeaveTypes() {

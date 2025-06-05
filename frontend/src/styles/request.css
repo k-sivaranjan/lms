@@ -47,6 +47,21 @@
 .leave{
   color: red;
 }
+
+.loading, .error-message {
+  text-align: center;
+  padding: 1rem;
+  color: #444;
+}
+
+.error-message {
+  color: red;
+  background-color: #ffe6e6;
+  border: 1px solid red;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
 .leave-request-submit-btn {
   display: block;
   margin: 20px auto 0 auto;

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api';
+import api from '../utils/api';
 import '../styles/addUser.css';
+import { Toast } from './Toast';
 
 function AddUser() {
   const [formData, setFormData] = useState({
@@ -11,8 +12,7 @@ function AddUser() {
     role: '',
     reportingManagerId: ''
   });
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+
   const navigate = useNavigate();
 
   const handleChange = ({ target: { name, value } }) => {
@@ -24,8 +24,7 @@ function AddUser() {
     const { name, email, password, role, reportingManagerId } = formData;
 
     if (!name || !email || !password || !role || !reportingManagerId) {
-      setMessage('');
-      setError('Please fill in all fields.');
+      Toast.error('Please fill in all fields.');
       return;
     }
 
@@ -33,15 +32,17 @@ function AddUser() {
       const { status } = await api.post('/auth/register', formData);
 
       if (status === 201) {
-        setMessage('User created successfully!');
-        setError('');
+        Toast.success('User created successfully!');
         setTimeout(() => {
           navigate('/');
         }, 1000);
       }
     } catch (err) {
-      setMessage('');
-      setError(err.response?.status === 400 ? 'User with this email already exists.' : 'Failed to create user due to server error.');
+      if (err.response?.status === 400) {
+        Toast.error('User with this email already exists.');
+      } else {
+        Toast.error('Failed to create user.');
+      }
     }
   };
 
@@ -86,11 +87,8 @@ function AddUser() {
           <option value="hr">HR</option>
         </select>
         <button type="submit">Create User</button>
-        <button type="button" onClick={()=>navigate("/add-many-users")}>Add Multiple Users</button>
+        <button type="button" onClick={() => navigate("/add-many-users")}>Add Multiple Users</button>
       </form>
-
-      {message && <p className="success-message">{message}</p>}
-      {error && <p className="error-message">{error}</p>}
     </div>
   );
 }

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useUser } from '../userContext';
-import api from "../api";
+import { useState, useEffect } from 'react';
+import { useUser } from '../utils/userContext';
+import api from '../utils/api';
+import { Toast } from './Toast';
 
 const statusMap = {
   1: "Pending",
@@ -14,9 +15,9 @@ const statusMap = {
 
 function IncomingRequests() {
   const [incomingRequests, setIncomingRequests] = useState([]);
+  const [comments, setComments] = useState({});
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchIncomingRequests();
@@ -28,23 +29,33 @@ function IncomingRequests() {
       const res = await api.get(`/leave/requests/${user.id}`);
       setIncomingRequests(res.data.incomingRequests);
     } catch {
-      setError('Error fetching incoming requests');
+      Toast.error('Error fetching incoming requests');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApproveReject = async (requestId, action) => {
+  const handleApproveReject = async (approvalId, action) => {
+    const comment = comments[approvalId] || "";
     try {
-      await api.put(`/leave/${action}/${requestId}`);
-      alert(`Request ${action}ed successfully`);
+      await api.put(`/leave/${action}/${approvalId}`, {
+        approverId: user.id,
+        comments: comment
+      });
+      Toast.success(`Request ${action}ed successfully`);
+
       setIncomingRequests(prev =>
-        prev.map(req =>
-          req.id === requestId ? { ...req, status: action === 'approve' ? 5 : 6 } : req
-        )
+        prev.filter(req => req.approval_id !== approvalId)
       );
+
+      setComments(prev => {
+        const updated = { ...prev };
+        delete updated[approvalId];
+        return updated;
+      });
+
     } catch {
-      alert(`Failed to ${action} request`);
+      Toast.error(`Failed to ${action} request`);
     }
   };
 
@@ -54,6 +65,15 @@ function IncomingRequests() {
       month: 'short',
       year: 'numeric'
     });
+
+  const handleCommentChange = (id, value) => {
+    setComments(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  if (loading) return <p>Loading leave requests...</p>;
 
   if (!incomingRequests.length) {
     return (
@@ -65,42 +85,67 @@ function IncomingRequests() {
   }
 
   return (
-    <div className="incoming-requests">
+    <div className="incoming-requests leave-history-container">
       <h3>Leave Requests for Approval</h3>
       <div className="scrollable-table">
-        <table>
+        <table className="leave-history-table">
           <thead>
             <tr>
-              <th>Employee</th>
+              <th>Requested By</th>
               <th>Leave Type</th>
               <th>From</th>
               <th>To</th>
               <th>Status</th>
               <th>Actions</th>
+              <th>Comments</th>
             </tr>
           </thead>
           <tbody>
-            {incomingRequests.map(req => (
-              <tr key={req.id}>
-                <td>{req.employee_name}</td>
-                <td>{req.leave_type}</td>
-                <td>{formatDate(req.start_date)}</td>
-                <td>{formatDate(req.end_date)}</td>
-                <td>{statusMap[req.status] || "Unknown"}</td>
-                <td>
-                  {[1, 2, 3, 4].includes(req.status) ? (
-                    <>
-                      <button className='approve-btn' onClick={() => handleApproveReject(req.id, 'approve')}>
-                        Approve
-                      </button>
-                      <button className='approve-btn reject-btn' onClick={() => handleApproveReject(req.id, 'reject')}>
-                        Reject
-                      </button>
-                    </>
-                  ) : 'No actions'}
-                </td>
-              </tr>
-            ))}
+            {incomingRequests.map(req => {
+              const isPending = [1, 2, 3, 4].includes(req.status);
+              return (
+                <tr key={req.approval_id}>
+                  <td>{req.employee_name}</td>
+                  <td>{req.leave_type}</td>
+                  <td>{formatDate(req.start_date)}</td>
+                  <td>{formatDate(req.end_date)}</td>
+                  <td>{statusMap[req.status] || "Unknown"}</td>
+                  <td>
+                    {isPending ? (
+                      <>
+                        <button
+                          className='approve-btn'
+                          onClick={() => handleApproveReject(req.approval_id, 'approve')}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          className='approve-btn reject-btn'
+                          onClick={() => handleApproveReject(req.approval_id, 'reject')}
+                        >
+                          Reject
+                        </button>
+                      </>
+                    ) : 'No actions'}
+                  </td>
+                  <td>
+                    {isPending ? (
+                      <textarea
+                        placeholder="Any Comments..."
+                        value={comments[req.approval_id] || ''}
+                        onChange={(e) => handleCommentChange(req.approval_id, e.target.value)}
+                        rows={3}
+                        style={{ width: '150px' }}
+                      />
+                    ) : (
+                      <div style={{ whiteSpace: 'pre-wrap', maxWidth: '150px' }}>
+                        {comments[req.approval_id] || req.comments || 'No comments'}
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

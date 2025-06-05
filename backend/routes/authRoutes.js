@@ -7,7 +7,7 @@ const { authMiddleware, roleMiddleware } = require('../middleware/middleware');
 //Upload files into memory as buffers.
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Routes for user management
+//Routes for user management
 router.post('/register', authMiddleware, roleMiddleware('admin'), register);
 router.post('/login', login);
 router.get('/users', authMiddleware, fetchAllUsers);

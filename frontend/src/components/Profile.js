@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { useUser } from '../userContext';
-import {useNavigate} from "react-router-dom";
-import api from "../api";
+import { useState } from 'react';
+import { useUser } from '../utils/userContext';
+import { useNavigate } from "react-router-dom";
+import api from "../utils/api";
+import { Toast } from './Toast';
 import '../styles/profile.css';
 
 function Profile() {
@@ -9,24 +10,26 @@ function Profile() {
     const navigate = useNavigate();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [message, setMessage] = useState('');
 
     const handlePasswordUpdate = async () => {
         if (!password || password.length < 6) {
-            return setMessage('Password must be at least 6 characters.');
+            Toast.error('Password must be at least 6 characters.');
+            return;
         }
+
         if (password !== confirmPassword) {
-            return setMessage('Passwords do not match.');
+            Toast.error('Passwords do not match.');
+            return;
         }
 
         try {
             const res = await api.put(`/auth/password/${user.id}`, { password });
-            setMessage(res.data.message || 'Password updated successfully');
+            Toast.success(res.data.message || 'Password updated successfully');
             setPassword('');
             setConfirmPassword('');
-            navigate("/")
+            navigate("/");
         } catch (err) {
-            setMessage('Failed to update password');
+            Toast.error('Failed to update password');
         }
     };
 
@@ -54,7 +57,6 @@ function Profile() {
                 <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
             </div>
             <button className='update-btn' onClick={handlePasswordUpdate}>Update Password</button>
-            {message && <p className="message">{message}</p>}
         </div>
     );
 }

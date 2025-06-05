@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useUser } from '../userContext';
-import api from "../api";
+import { useState, useEffect } from 'react';
+import { useUser } from '../utils/userContext';
+import api from '../utils/api';
 import '../styles/history.css';
+import { Toast } from './Toast';
 
 const statusMap = {
   1: "Pending",
@@ -16,94 +16,118 @@ const statusMap = {
 
 function History() {
   const { user } = useUser();
-  const navigate = useNavigate();
   const [leaveHistory, setLeaveHistory] = useState([]);
   const [selectedLeave, setSelectedLeave] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionComment, setActionComment] = useState('');
 
   useEffect(() => {
-    fetchLeaveHistory();
+    if (user?.id) fetchLeaveHistory();
   }, [user]);
 
   const fetchLeaveHistory = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const res = await api.get(`/leave/history/${user.id}`);
       setLeaveHistory(res.data.leaveHistory);
     } catch {
-      setError(prev => ({ ...prev, history: 'Error fetching leave history' }));
+      setError('Error fetching leave history');
+      Toast.error('Error fetching leave history');
     } finally {
-      setLoading(prev => ({ ...prev, history: false }));
+      setLoading(false);
     }
   };
 
   const handleCancel = async (leaveId) => {
-    if (!window.confirm('Are you sure you want to cancel this leave?')) return;
-
     try {
-      await api.put(`/leave/cancel/${leaveId}`);
-      alert('Leave cancelled');
+      await api.put(`/leave/cancel/${leaveId}`, {
+        comments: actionComment.trim(),
+      });
+      Toast.success('Leave cancelled');
       closeModal();
-      fetchLeaveHistory(); // Refresh after cancel
+      fetchLeaveHistory();
     } catch (err) {
-      console.error('Failed to cancel leave:', err);
-      alert('Failed to cancel leave');
+      console.error('Cancel failed:', err);
+      Toast.error('Failed to cancel leave');
     }
   };
 
   const formatDate = (isoString) => {
     const date = new Date(isoString);
-    return `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()}`;
+    return date.toLocaleDateString('en-GB');
+  };
+
+  const formatDateTime = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleString('en-GB', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true
+    });
   };
 
   const openModal = (leave) => {
     setSelectedLeave(leave);
     setShowModal(true);
+    setActionComment('');
   };
 
   const closeModal = () => {
-    setShowModal(false);
     setSelectedLeave(null);
+    setShowModal(false);
+    setActionComment('');
   };
 
-  const sortedHistory = [...leaveHistory].sort((a, b) => {
-    return a.status - b.status || new Date(b.created_at) - new Date(a.created_at);
-  });
+  const sortedHistory = [...leaveHistory].sort((a, b) =>
+    a.status - b.status || new Date(b.created_at) - new Date(a.created_at)
+  );
 
   return (
     <div className="leave-history-container">
-
-      {leaveHistory.length === 0 ? (
+      {loading ? (
+        <p>Loading leave history...</p>
+      ) : error ? (
+        <p className="error">{error}</p>
+      ) : leaveHistory.length === 0 ? (
         <div className="no-requests">
           <h3>No Leave History</h3>
           <p>You haven't made any leave requests yet.</p>
         </div>
       ) : (
-        <table className="leave-history-table">
-          <thead>
-            <tr>
-              <th>Leave Type</th>
-              <th>From</th>
-              <th>To</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedHistory.map((leave) => (
-              <tr key={leave.id}>
-                <td>{leave.leave_type}</td>
-                <td>{formatDate(leave.start_date)}</td>
-                <td>{formatDate(leave.end_date)}</td>
-                <td>{statusMap[leave.status] || "Unknown"}</td>
-                <td>
-                  <button onClick={() => openModal(leave)} className="view-button">View Request</button>
-                </td>
+        <div className='scrollable-table'>
+          <table className="leave-history-table">
+            <thead>
+              <tr>
+                <th>Requested At</th>
+                <th>Leave Type</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Status</th>
+                <th>Action Taken On</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {sortedHistory.map((leave) => (
+                <tr key={leave.id}>
+                  <td>{formatDateTime(leave.created_at)}</td>
+                  <td>{leave.leave_type}</td>
+                  <td>{formatDate(leave.start_date)}</td>
+                  <td>{formatDate(leave.end_date)}</td>
+                  <td>{statusMap[leave.status] || "Unknown"}</td>
+                  <td>{formatDateTime(leave.updated_at)}</td>
+                  <td>
+                    <button onClick={() => openModal(leave)} className="view-button">
+                      View Request
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {showModal && selectedLeave && (
@@ -117,14 +141,31 @@ function History() {
             <p><strong>Reason:</strong> {selectedLeave.reason || 'N/A'}</p>
             <p><strong>Manager:</strong> {selectedLeave.manager_name || 'N/A'}</p>
 
-            {(selectedLeave.status !== 7 && selectedLeave.status !== 6 &&
+            {(selectedLeave.status !== 6 &&
+              selectedLeave.status !== 7 &&
               new Date(selectedLeave.start_date) > new Date()) && (
-                <button onClick={() => handleCancel(selectedLeave.id)} className="cancel-button">
+              <>
+                <label htmlFor="cancelComment"><strong>Add Comment:</strong></label>
+                <textarea
+                  id="cancelComment"
+                  value={actionComment}
+                  onChange={(e) => setActionComment(e.target.value)}
+                  placeholder="Enter reason for cancelling leave..."
+                  rows={3}
+                  style={{ width: '100%', marginBottom: '1rem' }}
+                />
+                <button
+                  onClick={() => handleCancel(selectedLeave.id)}
+                  className="cancel-button"
+                >
                   Cancel Leave
                 </button>
-              )}
+              </>
+            )}
 
-            <button onClick={closeModal} className="close-button">Close</button>
+            <button onClick={closeModal} className="close-button" style={{ marginTop: '1rem' }}>
+              Close
+            </button>
           </div>
         </div>
       )}

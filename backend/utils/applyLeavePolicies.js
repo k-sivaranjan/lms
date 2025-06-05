@@ -1,18 +1,25 @@
 const { AppDataSource } = require('../config/db');
+const { User } = require('../entities/User');
+const { LeavePolicy } = require('../entities/LeavePolicy');
+const { LeaveBalance } = require('../entities/LeaveBalance');
+
 const currentYear = new Date().getFullYear();
 
 async function applyLeavePolicies() {
-  const userRepo = AppDataSource.getRepository("User");
-  const policyRepo = AppDataSource.getRepository("LeavePolicy");
-  const balanceRepo = AppDataSource.getRepository("LeaveBalance");
+
+  const userRepo = AppDataSource.getRepository(User);
+  const policyRepo = AppDataSource.getRepository(LeavePolicy);
+  const balanceRepo = AppDataSource.getRepository(LeaveBalance);
 
   const users = await userRepo.find({ relations: ["role"] });
   const policies = await policyRepo.find({ relations: ["role", "leaveType"] });
 
   for (const user of users) {
+
     const userPolicies = policies.filter(p => p.role.id === user.role.id);
 
     for (const policy of userPolicies) {
+      
       const existing = await balanceRepo.findOne({
         where: {
           user: { id: user.id },
@@ -34,17 +41,19 @@ async function applyLeavePolicies() {
           relations: ["user", "leaveType"],
         });
 
-        const unusedLeaves = previousBalance
-          ? Math.max(0, previousBalance.balance - previousBalance.used)
-          : 0;
-        const maxCarry = 10;
-        const carryForward = Math.min(unusedLeaves, maxCarry);
+        let carryForward = 0;
+
+        if (previousBalance) {
+          carryForward = Math.min(policy.accrual_per_year, previousBalance.balance);
+        }
+
+        const newBalanceValue = policy.leaveType.maxPerYear + carryForward;
 
         const newBalance = balanceRepo.create({
           user: user,
           leaveType: policy.leaveType,
           year: currentYear,
-          balance: policy.accrual_per_year + carryForward,
+          balance: newBalanceValue,
           used: 0,
         });
 

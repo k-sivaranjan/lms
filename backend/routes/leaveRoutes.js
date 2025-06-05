@@ -14,9 +14,9 @@ const {
   getIncomingRequestsHandler,
   approveLeaveHandler,
   rejectLeaveHandler,
-  createLeaveHandler,
-  updateLeaveHandler,
-  deleteLeaveHandler
+  createLeaveTypeHandler,
+  updateLeaveTypeHandler,
+  deleteLeaveTypeHandler
 } = require('../controllers/leaveController');
 
 const { authMiddleware, roleMiddleware } = require('../middleware/middleware');
@@ -38,9 +38,9 @@ router.put('/reject/:rejectId', authMiddleware, rejectLeaveHandler);
 //Leave Types
 router.get('/types/:userId', authMiddleware, fetchLeaveTypesByRole);
 router.get('/types', authMiddleware, fetchLeaveTypes);
-router.post('/types', authMiddleware, roleMiddleware('admin'), createLeaveHandler);
-router.put('/types/:id', authMiddleware, roleMiddleware('admin'), updateLeaveHandler);
-router.delete('/types/:id', authMiddleware, roleMiddleware('admin'), deleteLeaveHandler);
+router.post('/types', authMiddleware, roleMiddleware('admin'), createLeaveTypeHandler);
+router.put('/types/:id', authMiddleware, roleMiddleware('admin'), updateLeaveTypeHandler);
+router.delete('/types/:id', authMiddleware, roleMiddleware('admin'), deleteLeaveTypeHandler);
 
 // Admin Routes
 router.get('/on-leave-today', authMiddleware,roleMiddleware('admin'),fetchUsersOnLeaveToday);

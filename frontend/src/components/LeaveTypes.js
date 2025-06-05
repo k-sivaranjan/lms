@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import api from '../api';
+import { useState, useEffect } from 'react';
+import api from '../utils/api';
+import { Toast } from './Toast';
 import '../styles/policy.css';
 
 function LeaveTypes() {
@@ -21,21 +22,24 @@ function LeaveTypes() {
   const fetchLeaveTypes = async () => {
     try {
       const res = await api.get('/leave/types');
+
       const drafts = {};
-      res.data.forEach((lt) => {
+      res.data.leaveTypes.forEach((lt) => {
         drafts[lt.leaveName] = {
           leaveTypeId: lt.leaveTypeId,
           leaveName: lt.leaveName,
-          maxPerYear: lt.maxPerYear,
+          maxPerYear: lt.maxPerYear || 0,
           multiApprover: lt.multiApprover,
           accrualPerYear: lt.accrualPerYear,
           applicableFromRoleId: lt.maxRoleId
         };
       });
-      setLeaveTypes(res.data);
+      
+      setLeaveTypes(res.data.leaveTypes);
       setDraftLeaves(drafts);
     } catch (err) {
       console.error('Error fetching leave types:', err);
+      Toast.error('Failed to fetch leave types');
     }
   };
 
@@ -60,21 +64,22 @@ function LeaveTypes() {
         roleId: updatedLeave.applicableFromRoleId
       };
       await api.put(`/leave/types/${updatedLeave.leaveTypeId}`, payload);
-      alert('Leave policy updated');
+      Toast.success('Leave policy updated');
       await fetchLeaveTypes();
     } catch (err) {
       console.error('Failed to update leave policy:', err);
-      alert('Failed to update leave policy');
+      Toast.error('Failed to update leave policy');
     }
   };
 
   const handleDelete = async (id) => {
     try {
       await api.delete(`/leave/types/${id}`);
+      Toast.success('Leave type deleted');
       await fetchLeaveTypes();
     } catch (err) {
       console.error('Failed to delete leave type:', err);
-      alert('Failed to delete leave type');
+      Toast.error('Failed to delete leave type');
     }
   };
 
@@ -88,6 +93,7 @@ function LeaveTypes() {
         roleId: newLeave.applicableFromRoleId
       };
       await api.post('/leave/types', payload);
+      Toast.success('Leave type added successfully');
       setNewLeave({
         leaveName: '',
         maxPerYear: 0,
@@ -99,13 +105,12 @@ function LeaveTypes() {
       await fetchLeaveTypes();
     } catch (err) {
       console.error('Failed to add leave type:', err);
-      alert('Failed to add leave type');
+      Toast.error('Failed to add leave type');
     }
   };
 
   return (
     <div className="leave-policy-container">
-      <h3>Leave Types</h3>
       <div className="leave-types-grid leaves-section">
         {leaveTypes.map((lt, index) => {
           const draft = draftLeaves[lt.leaveName] || {};
@@ -249,7 +254,6 @@ function LeaveTypes() {
         ) : (
           <button className="add-leave-btn" onClick={() => setShowAddForm(true)}>+ Add Leave Type</button>
         )}
-
       </div>
     </div>
   );

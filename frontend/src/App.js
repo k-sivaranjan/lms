@@ -1,7 +1,5 @@
-import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { UserProvider } from './userContext';
-import axios from 'axios';
+import { UserProvider } from './utils/userContext';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import Profile from './components/Profile';
@@ -18,12 +16,6 @@ import AllUsers from './components/AllUsers';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers['Authorization'] = `Bearer ${token}`;
-    }
-  }, []);
 
   return (
     <UserProvider>

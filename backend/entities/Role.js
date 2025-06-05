@@ -18,8 +18,12 @@ const Role = new EntitySchema({
     },
     name: {
       type: "enum",
-      enum: UserRole,
+      enum: Object.values(UserRole),
       unique: true,
+    },
+    level: {
+      type: Number,
+      nullable: true,
     },
   },
   relations: {

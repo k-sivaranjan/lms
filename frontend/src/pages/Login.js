@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../userContext';
-import api,{apiPostWithRetry} from "../api"
+import { useUser } from '../utils/userContext';
+import {apiPostWithRetry} from "../utils/api"
 import '../styles/login.css';
 
 function Login() {
@@ -15,9 +15,9 @@ function Login() {
     e.preventDefault();
     try {
       const res = await apiPostWithRetry('/auth/login', { email, password });
-      login(res.data.user);
-      localStorage.setItem('token', res.data.token);
-      api.defaults.headers['Authorization'] = `Bearer ${res.data.token}`;
+      
+      login(res.data.data.user);
+      localStorage.setItem('token', res.data.data.token);
       navigate('/');
     } catch (error) {
       if (error.response) {

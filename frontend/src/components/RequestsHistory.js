@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useUser } from '../userContext';
-import api from "../api";
+import { useState, useEffect } from 'react';
+import { useUser } from '../utils/userContext';
+import {Toast} from "./Toast"
+import api from "../utils/api";
 import '../styles/history.css';
 
 const statusMap = {
@@ -17,53 +18,77 @@ function RequestsHistory() {
   const [requestHistory, setRequestHistory] = useState([]);
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchRequestHistory();
   }, [user]);
 
   const fetchRequestHistory = async () => {
-    if (!user || user.role.name === "employee") return;
+    if (!user || user.role.name === "employee") {
+      setLoading(false);
+      return;
+    }
     try {
       const res = await api.get(`/leave/requests/history/${user.id}`);
       setRequestHistory(res.data.requestsHistory);
     } catch {
-      setError('Error fetching incoming requests');
+      Toast.error('Error fetching team leave request history.');
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (date) =>
-    new Date(date).toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
+  const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const formatDateTime = (isoString) => {
+    const date = new Date(isoString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    const strHours = String(hours).padStart(2, '0');
+    return `${day}/${month}/${year}, ${strHours}:${minutes} ${ampm}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="loading">
+        <p>Loading team leave request history...</p>
+      </div>
+    );
+  }
 
   if (!requestHistory.length) {
     return (
       <div className="no-requests">
         <h3>No Team History</h3>
-        <p>There are no team history available at the moment.</p>
+        <p>There are no team leave history records at the moment.</p>
       </div>
     );
   }
 
   return (
     <div className="leave-history-container">
-      <h3>Leave Requests for Approval</h3>
+      <h3>Team Leave Requests History</h3>
       <div className="scrollable-table">
         <table className="leave-history-table">
           <thead>
             <tr>
-              <th>Name</th>
+              <th>Requested By</th>
               <th>Leave Type</th>
               <th>From</th>
               <th>To</th>
               <th>Status</th>
-              <th>Updated At</th>
+              <th>Action Taken On</th>
             </tr>
           </thead>
           <tbody>
@@ -73,8 +98,8 @@ function RequestsHistory() {
                 <td>{req.leave_type}</td>
                 <td>{formatDate(req.start_date)}</td>
                 <td>{formatDate(req.end_date)}</td>
-                <td>{req.status}</td>
-                <td>{formatDate(req.updated_at)}</td>
+                <td>{statusMap[req.status]}</td>
+                <td>{formatDateTime(req.updated_at)}</td>
               </tr>
             ))}
           </tbody>
@@ -82,6 +107,6 @@ function RequestsHistory() {
       </div>
     </div>
   );
-};
+}
 
 export default RequestsHistory;

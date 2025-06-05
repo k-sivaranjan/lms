@@ -31,6 +31,7 @@ const LeaveRequest = new EntitySchema({
     managerId: {
       name: "manager_id",
       type: Number,
+      nullable: true,
     },
     leaveTypeId: {
       name: "leave_type_id",
@@ -63,16 +64,16 @@ const LeaveRequest = new EntitySchema({
       type: "int",
       default: LeaveStatus.PENDING,
     },
-    finalApprovalLevel: {
-      name: "final_approval_level",
-      type: Number,
-      default: 1,
-    },
     totalDays: {
       name: "total_days",
       type: "decimal",
       precision: 4,
       scale: 2,
+    },
+    finalApprovalLevel: {
+      name: "final_approval_level",
+      type: "int",
+      default: 1,
     },
     createdAt: {
       name: "created_at",
@@ -85,7 +86,6 @@ const LeaveRequest = new EntitySchema({
       default: () => "CURRENT_TIMESTAMP",
       onUpdate: "CURRENT_TIMESTAMP",
     },
-
   },
   relations: {
     user: {

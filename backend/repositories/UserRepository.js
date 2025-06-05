@@ -50,6 +50,7 @@ const getUserById = async (id) => {
   return userRepo.findOne({ where: { id }, relations: ['role'] });
 };
 
+// Update Password
 const updatePasswordById = async (userId, password) => {
   const user = await userRepo.findOneBy({ id: userId });
   user.password = password;

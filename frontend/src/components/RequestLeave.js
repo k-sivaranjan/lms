@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../userContext';
-import api from "../api";
+import { useUser } from '../utils/userContext';
+import api from "../utils/api";
+import { Toast } from './Toast';
 import '../styles/request.css';
 
 function LeaveRequest() {
@@ -11,6 +12,7 @@ function LeaveRequest() {
   const [leaveDetails, setLeaveDetails] = useState([]);
   const [leaveTypeId, setLeaveTypeId] = useState('');
   const [leaveTypes, setLeaveTypes] = useState([]);
+  const [leaveHistory, setLeaveHistory] = useState([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isHalfDay, setIsHalfDay] = useState(false);
@@ -23,19 +25,23 @@ function LeaveRequest() {
   useEffect(() => {
     fetchBalance();
     fetchLeaveTypes();
+    fetchLeaveHistory()
   }, [user]);
 
   const fetchLeaveTypes = async () => {
     try {
       const res = await api.get(`/leave/types/${user.id}`);
-      setLeaveTypes(res.data);
+      setLeaveTypes(res.data.leaveTypes);
     } catch (err) {
-      console.error('Error fetching leave types:', err);
+      setError("Error fetching leave types.");
     }
   };
 
   const fetchBalance = async () => {
-    if (!user || user.role.name === "admin") return;
+    if (!user || user.role.name === "admin") {
+      setLoading(false);
+      return;
+    }
     try {
       const res = await api.get(`/leave/balance/${user.id}`);
       setLeaveDetails(res.data.leaveDetails);
@@ -46,7 +52,21 @@ function LeaveRequest() {
     }
   };
 
-  // Calculate leave days
+  const fetchLeaveHistory = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.get(`/leave/history/${user.id}`);
+      setLeaveHistory(res.data.leaveHistory);
+
+    } catch {
+      setError('Error fetching leave history');
+      Toast.error('Error fetching leave history');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const calculateLeaveDays = () => {
       if (!startDate || !endDate) {
@@ -83,12 +103,29 @@ function LeaveRequest() {
     e.preventDefault();
 
     if (!leaveTypeId || !startDate || !endDate || !reason || (isHalfDay && !halfDayType)) {
-      alert('Please fill all required fields.');
+      Toast.error('Please fill all required fields.');
       return;
     }
 
     if (new Date(endDate) < new Date(startDate)) {
-      alert('End date cannot be before start date.');
+      Toast.error('End date cannot be before start date.');
+      return;
+    }
+
+    const newStart = new Date(startDate);
+    const newEnd = new Date(endDate);
+
+    const hasOverlap = leaveHistory.some((leave) => {
+      if (leave.status === 7) return false;
+
+      const existingStart = new Date(leave.start_date);
+      const existingEnd = new Date(leave.end_date);
+
+      return !(newEnd < existingStart || newStart > existingEnd);
+    });
+
+    if (hasOverlap) {
+      Toast.error("You already have a leave applied for these dates.");
       return;
     }
 
@@ -105,26 +142,38 @@ function LeaveRequest() {
         totalDays
       });
 
-      const requestId = res.data.result?.insertId;
+      Toast.success('Leave requested successfully');
 
-      if (parseInt(leaveTypeId) === 9 && requestId) {
-        await api.put(`/leave/approve/${requestId}`);
-      }
-
-      alert('Leave requested successfully');
-
-      // Reset form
       setLeaveTypeId('');
       setStartDate('');
       setEndDate('');
       setIsHalfDay(false);
       setHalfDayType('');
       setReason('');
+
       navigate("/");
     } catch (err) {
-      alert(err.response?.data?.error || "Error submitting leave request.");
+      Toast.error(err.response?.data?.error || "Error submitting leave request.");
     }
   };
+
+
+  if (loading) {
+    return (
+      <div className="loading">
+        <p>Loading leave request form...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-message">
+        <h3>Error</h3>
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="leave-request-form">
@@ -201,7 +250,7 @@ function LeaveRequest() {
         </>
       )}
 
-      <label className="leave-request-label">Reason:</label>
+      <label className="leave-request-label">Add Comments:</label>
       <textarea
         className="leave-request-textarea"
         value={reason}

@@ -2,6 +2,7 @@ const { LeaveStatus } = require('../entities/LeaveRequest');
 
 const leavePolicyRepository = require('../repositories/LeavePolicyRepository');
 const leaveTypeRepository = require('../repositories/LeaveTypeRepository');
+const leaveApprovalRepository = require('../repositories/LeaveApprovalRepository');
 const leaveRequestRepository = require('../repositories/LeaveRequestRepository');
 const leaveBalanceRepository = require('../repositories/LeaveBalanceRepository');
 const userRepository = require('../repositories/UserRepository');
@@ -41,75 +42,104 @@ const getLeavePolicy = async () => {
   return leavePolicyRepository.getAllPolicy();
 }
 
-// Request a leave
-const requestLeave = async (
-  { userId, managerId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason, totalDays }
-) => {
-  const balances = await leaveBalanceRepository.getLeaveBalanceByUserAndYear(
-    userId,
-    new Date(startDate).getFullYear()
-  );
-  const leaveBalance = balances.find(balance => balance.leaveTypeId === Number(leaveTypeId));
+//Request Leave
+const requestLeave = async ({
+  userId, managerId, leaveTypeId, startDate,
+  endDate, isHalfDay, halfDayType, reason, totalDays
+}) => {
+  const year = new Date(startDate).getFullYear();
 
-  if (!leaveBalance) {
-    throw new Error('Leave balance not found for the user or leave type');
-  }
+  // Get Leave Type and Validate
+  const leaveType = await leaveTypeRepository.getLeaveTypeById(leaveTypeId);
+  if (!leaveType) throw new Error('Leave type not found');
 
-  const totalUsedLeave = leaveBalance.used;
-  const maxLeaveDays = leaveBalance.balance + leaveBalance.used;
+  const maxPerYear = leaveType.maxPerYear;
+  const multiApprover = leaveType.multiApprover;
+  const isAutoApprove = multiApprover === 0 || multiApprover === null;
 
-  if (leaveTypeId != 9 && leaveTypeId != 10) {
+  // Balance Check
+  if (maxPerYear && maxPerYear > 0) {
+    const balances = await leaveBalanceRepository.getLeaveBalanceByUserAndYear(userId, year);
+    const leaveBalance = balances.find(balance => balance.leaveTypeId === Number(leaveTypeId));
+    if (!leaveBalance) throw new Error('Leave balance not found');
+
+    const totalUsedLeave = leaveBalance.used;
+    const maxLeaveDays = leaveBalance.balance + leaveBalance.used;
+
     if (totalUsedLeave + totalDays > maxLeaveDays) {
-      throw new Error(`You have exceeded the maximum allowed leave days for this leave type. Max allowed: ${maxLeaveDays} days.`);
+      throw new Error(`Exceeded allowed leave days. Max allowed: ${maxLeaveDays}`);
     }
   }
 
-  const leaveType = await leaveTypeRepository.getLeaveTypeById(leaveTypeId);
-  const multiApprover = leaveType?.multiApprover || 1;
-
+  // Determine approval levels
   const user = await userRepository.getUserById(userId);
-  if (!user) {
-    throw new Error('User not found');
-  }
+  if (!user) throw new Error('User not found');
 
-  const role = user.role.name;
+  const maxApproverByRole = user.role.level;
+  const finalApprovalLevel = totalDays >= 5
+    ? maxApproverByRole
+    : Math.min(multiApprover, maxApproverByRole);
 
-  const maxApproverByRole = role === 'employee' ? 3 : role === 'manager' ? 2 : 1;
-  const finalApprovalLevel = totalDays >= 5 ? maxApproverByRole : Math.min(multiApprover, maxApproverByRole);
+  // Determine initial leave request status
+  const initialStatus = isAutoApprove
+    ? LeaveStatus.APPROVED
+    : (finalApprovalLevel > 1 ? LeaveStatus.PENDING_L1 : LeaveStatus.PENDING);
 
-  let level2ApproverId = null;
-  if (managerId) {
-    const manager = await userRepository.getUserById(managerId);
-    level2ApproverId = manager?.managerId;
-  }
-
-  let level3ApproverId = null;
-  if (level2ApproverId) {
-    const level2Manager = await userRepository.getUserById(level2ApproverId);
-    level3ApproverId = level2Manager?.managerId;
-  }
-
-  let initialStatus;
-
-  if (parseInt(leaveTypeId) === 9) {
-    initialStatus = LeaveStatus.APPROVED
-  } else {
-    initialStatus = finalApprovalLevel > 1 ? LeaveStatus.PENDING_L1 : LeaveStatus.PENDING;
-  }
-
-  const leaveRequest = await leaveRequestRepository.createLeaveRequest(
-    {userId,
+  // Create leave request
+  const leaveRequest = await leaveRequestRepository.createLeaveRequest({
+    userId,
     managerId,
     leaveTypeId,
-    startDate :new Date(startDate),
-    endDate : new Date(endDate),
+    startDate: new Date(startDate),
+    endDate: new Date(endDate),
     isHalfDay,
     halfDayType,
     reason,
-    status :initialStatus,
+    status: initialStatus,
     finalApprovalLevel,
-    totalDays}
-  );
+    totalDays,
+  });
+  const startYear = new Date(startDate).getFullYear();
+
+  // Create approval entries
+  let currentApproverId = managerId;
+  const approvals = [];
+
+  if (isAutoApprove && finalApprovalLevel === 0) {
+    await leaveBalanceRepository.updateLeaveBalanceByUserAndType({userId, leaveTypeId, year:startYear, balanceChange:-totalDays, usedChange:totalDays})
+    approvals.push({
+      leaveRequestId: leaveRequest.id,
+      approverId: userId,
+      approvalLevel: 1,
+      status: LeaveStatus.APPROVED,
+      comments: "Auto-approved (Emergency Leave)",
+      createdAt: new Date()
+    });
+  }
+
+  for (let level = 1; level <= finalApprovalLevel; level++) {
+    const approverId = currentApproverId;
+
+    if (!approverId) break;
+
+    approvals.push({
+      leaveRequestId: leaveRequest.id,
+      approverId,
+      approvalLevel: level,
+      status: LeaveStatus.PENDING,
+      comments: null,
+      createdAt: new Date()
+    });
+
+    if (!isAutoApprove) {
+      const approver = await userRepository.getUserById(currentApproverId);
+      currentApproverId = approver?.managerId;
+    }
+  }
+
+  if (approvals.length > 0) {
+    await leaveApprovalRepository.bulkInsertApprovals(approvals);
+  }
 
   return leaveRequest;
 };
@@ -119,47 +149,47 @@ const getLeaveHistory = async (userId) => {
   return leaveRequestRepository.getLeaveHistoryByUserId(userId);
 };
 
-const getRequestsHistory = async (userId)=>{
+//Get All Request Approved/Rejected History
+const getRequestsHistory = async (userId) => {
   return leaveRequestRepository.getTeamRequestsHistoryByManagerId(userId);
 }
 
-// Cancel a leave request
-const cancelLeave = async (leaveRequestId) => {
-  const leaveRequest = await leaveRequestRepository.getLeaveRequestById(leaveRequestId);
+//Cancel Leave
+const cancelLeave = async (leaveRequestId, comments) => {
+  const leaveRequest = await leaveRequestRepository.getLeaveRequestByIdWithApprovals(leaveRequestId);
 
   if (!leaveRequest) {
     throw new Error('Leave request not found');
   }
-  const { status, userId, leaveTypeId, startDate, totalDays } = leaveRequest;
 
+  const { status, userId, leaveTypeId, startDate, totalDays, approvals } = leaveRequest;
+
+  // Cancel each approval
+  if (approvals && approvals.length > 0) {
+    for (const approval of approvals) {
+      if (approval.status !== LeaveStatus.CANCELLED) {
+        await leaveApprovalRepository.updateApprovalStatus(approval.id, LeaveStatus.CANCELLED, comments);
+      }
+    }
+  }
+
+  // Cancel leave request
   await leaveRequestRepository.updateLeaveRequestStatus(leaveRequestId, LeaveStatus.CANCELLED);
 
+  // Adjust leave balance if already approved
   if (status === LeaveStatus.APPROVED) {
-    const leaveTypesOnlyUsed = [9, 10];
-
+    const leaveTypesOnlyUsed = [10];
     const startDateObj = startDate instanceof Date ? startDate : new Date(startDate);
     const year = startDateObj.getFullYear();
 
     if (leaveTypesOnlyUsed.includes(leaveTypeId)) {
-      await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
-        userId,
-        leaveTypeId,
-        year,
-        0,
-        -totalDays
-      );
+      await leaveBalanceRepository.updateLeaveBalanceByUserAndType({userId,leaveTypeId,year,balanceChange :null,usedChange:-totalDays});
     } else {
-      await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
-        userId,
-        leaveTypeId,
-        year,
-        totalDays,
-        -totalDays
-      );
+      await leaveBalanceRepository.updateLeaveBalanceByUserAndType({userId,leaveTypeId,year,balanceChange:totalDays,usedChange:-totalDays});
     }
   }
 
-  return { success: true, message: 'Leave request cancelled successfully' };
+  return { success: true, message: 'Leave request and related approvals cancelled successfully' };
 };
 
 // Get incoming requests for a specific user
@@ -173,131 +203,100 @@ const getIncomingRequests = async (userId) => {
 };
 
 // Approve a leave request
-const approveLeave = async (requestId) => {
+const approveLeave = async (approvalId, approverId, comments = null) => {
+  // Get the approval record using approvalId
+  const approval = await leaveApprovalRepository.getApprovalById(approvalId);
+  if (!approval) throw new Error('Approval record not found');
+
+  // Check if the correct approver is taking action
+  if (approval.approverId !== approverId) {
+    throw new Error('This approver is not authorized for this approval');
+  }
+
+  if (approval.status !== 1) {
+    throw new Error('Leave already acted on by this approver');
+  }
+
+  const requestId = approval.leaveRequestId; // Extract leave request ID from approval
   const leaveRequest = await leaveRequestRepository.getLeaveRequestById(requestId);
-  if (!leaveRequest) {
-    throw new Error('Leave request not found');
-  }
+  if (!leaveRequest) throw new Error('Leave request not found');
 
-  const { userId, leaveTypeId, status, totalDays, finalApprovalLevel, startDate } = leaveRequest;
+  // Approve the current level
+  await leaveApprovalRepository.updateApprovalStatus(approvalId, LeaveStatus.APPROVED, comments);
 
-  if (totalDays === null) {
-    throw new Error('Total days not calculated');
-  }
+  const currentLevel = approval.approvalLevel;
+  const finalLevel = leaveRequest.finalApprovalLevel;
 
-  const leaveDays = totalDays;
-  const startDateObj = startDate instanceof Date ? startDate : new Date(startDate);
-  const year = startDateObj.getFullYear();
+  if (currentLevel < finalLevel) {
+    // Don't touch the next level yet — they’ll see it in their incoming list
+    let nextStatus;
+    if (currentLevel === 1) nextStatus = LeaveStatus.PENDING_L2;
+    else if (currentLevel === 2) nextStatus = LeaveStatus.PENDING_L3;
+    else nextStatus = LeaveStatus.APPROVED;
 
-  if (status === LeaveStatus.PENDING) {
+    await leaveRequestRepository.updateLeaveRequestStatus(requestId, nextStatus);
+    return { message: `Approved. Moved to level ${currentLevel + 1}` };
+
+  } else {
+    // Final level — fully approve and update leave balance
     await leaveRequestRepository.updateLeaveRequestStatus(requestId, LeaveStatus.APPROVED);
 
-    if (leaveTypeId === 9 || leaveTypeId === 10) {
-      await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
-        userId,
-        leaveTypeId,
-        year,
-        0,
-        leaveDays
-      );
-    } else {
-      await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
-        userId,
-        leaveTypeId,
-        year,
-        -leaveDays,
-        leaveDays
-      );
-    }
-
-    return { nextStep: 'Approved' };
-  } else if (status === LeaveStatus.PENDING_L1) {
-    await leaveRequestRepository.updateLeaveRequestStatus(requestId, LeaveStatus.PENDING_L2);
-    return { nextStep: 'Approved (L2)' };
-  } else if (status === LeaveStatus.PENDING_L2) {
-    if (finalApprovalLevel === 3) {
-      await leaveRequestRepository.updateLeaveRequestStatus(requestId, LeaveStatus.PENDING_L3);
-      return { nextStep: 'Approved (L3)' };
-    } else {
-      await leaveRequestRepository.updateLeaveRequestStatus(requestId, LeaveStatus.APPROVED);
-
-      if (leaveTypeId === 9 || leaveTypeId === 10) {
-        await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
-          userId,
-          leaveTypeId,
-          year,
-          0,
-          leaveDays
-        );
-      } else {
-        await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
-          userId,
-          leaveTypeId,
-          year,
-          -leaveDays,
-          leaveDays
-        );
-      }
-
-      return { nextStep: 'Approved' };
-    }
-  } else if (status === LeaveStatus.PENDING_L3) {
-    await leaveRequestRepository.updateLeaveRequestStatus(requestId, LeaveStatus.APPROVED);
+    const { userId, leaveTypeId, totalDays, startDate } = leaveRequest;
+    const startYear = new Date(startDate).getFullYear();
 
     if (leaveTypeId === 9 || leaveTypeId === 10) {
-      await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
-        userId,
-        leaveTypeId,
-        year,
-        0,
-        leaveDays
-      );
+      await leaveBalanceRepository.updateLeaveBalanceByUserAndType({userId, leaveTypeId, year:startYear, balanceChange :null, usedChange:totalDays});
     } else {
-      await leaveBalanceRepository.updateLeaveBalanceByUserAndType(
-        userId,
-        leaveTypeId,
-        year,
-        -leaveDays,
-        leaveDays
-      );
+      await leaveBalanceRepository.updateLeaveBalanceByUserAndType({userId, leaveTypeId, year:startYear, balanceChange:-totalDays, usedChange:totalDays});
     }
 
-    return { nextStep: 'Approved' };
+    return { message: 'Leave fully approved and balance updated' };
   }
-
-  return { message: 'Leave request already processed' };
 };
 
-// Reject a leave request
-const rejectLeave = async (requestId) => {
-  const leaveRequest = await leaveRequestRepository.getLeaveRequestById(requestId);
-  if (!leaveRequest) {
-    throw new Error('Leave request not found');
+//Reject  a leave
+const rejectLeave = async (approvalId, approverId, comments = null) => {
+  // Get the approval record using approvalId
+  const approval = await leaveApprovalRepository.getApprovalById(approvalId);
+  if (!approval) throw new Error('Approval record not found');
+
+  // Verify that the correct approver is acting
+  if (approval.approverId !== approverId) {
+    throw new Error('This approver is not authorized to act on this request');
   }
 
+  if (approval.status !== LeaveStatus.PENDING) {
+    throw new Error('Leave already acted on by this approver');
+  }
+
+  // Mark this approval as rejected
+  await leaveApprovalRepository.updateApprovalStatus(approvalId, LeaveStatus.REJECTED, comments);
+
+  // Update the entire leave request status to REJECTED
+  const requestId = approval.leaveRequestId;
   await leaveRequestRepository.updateLeaveRequestStatus(requestId, LeaveStatus.REJECTED);
 
-  return { success: true, message: 'Leave request rejected successfully' };
+  return { message: 'Leave request rejected and status updated' };
 };
 
 // Add a new leave type
-const addLeaveType = async ({name, maxPerYear, multiApprover = 1}) => {
-  return leaveTypeRepository.createLeaveType({name, maxPerYear, multiApprover});
+const addLeaveType = async ({ name, maxPerYear, multiApprover = 1 }) => {
+  return leaveTypeRepository.createLeaveType({ name, maxPerYear, multiApprover });
 };
 
 //Add a new leave Policy
-const addLeavePolicy = async ({id,accrual_per_year,roleId})=>{
-  return leavePolicyRepository.createLeavePolicy({id,accrual_per_year,roleId})
+const addLeavePolicy = async ({ id, accrual_per_year, roleId }) => {
+  return leavePolicyRepository.createLeavePolicy({ id, accrual_per_year, roleId })
 }
 
 // Update an existing leave type
-const updateLeaveType = async ({id, name, maxPerYear, multiApprover = 1}) => {
-  return leaveTypeRepository.updateLeaveType({id, name, maxPerYear, multiApprover});
+const updateLeaveType = async ({ id, name, maxPerYear, multiApprover = 1 }) => {
+  return leaveTypeRepository.updateLeaveType({ id, name, maxPerYear, multiApprover });
 };
 
 //Update an existing leave policy
-const updateLeavePolicy = async ({id, accrual_per_year, roleId}) => {
-  return leavePolicyRepository.updateLeave({id, accrual_per_year, roleId})
+const updateLeavePolicy = async ({ id, accrual_per_year, roleId }) => {
+  return leavePolicyRepository.updateLeave({ id, accrual_per_year, roleId })
 }
 
 // Delete a leave type

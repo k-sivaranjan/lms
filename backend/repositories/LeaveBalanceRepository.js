@@ -5,7 +5,7 @@ const { In } = require('typeorm');
 const leaveBalanceRepo = AppDataSource.getRepository(LeaveBalance);
 
 // Get all leave balances by allowed type
-const getLeaveBalancesByAllowedTypes = async ({userId, year, allowedLeaveTypeIds}) => {
+const getLeaveBalancesByAllowedTypes = async ({ userId, year, allowedLeaveTypeIds }) => {
   return leaveBalanceRepo.find({
     where: {
       userId,
@@ -15,6 +15,7 @@ const getLeaveBalancesByAllowedTypes = async ({userId, year, allowedLeaveTypeIds
     relations: ['leaveType']
   });
 };
+
 // Get all leave balances for a user in a specific year
 const getLeaveBalanceByUserAndYear = async (userId, year) => {
   return leaveBalanceRepo.find({ where: { userId, year }, relations: ['leaveType'] });
@@ -30,13 +31,15 @@ const updateLeaveBalance = async (id, balance, used) => {
 };
 
 // Update the balance and used fields of a leave balance record based on user ID, leave type ID, and year
-const updateLeaveBalanceByUserAndType = async (userId, leaveTypeId, year, balanceChange, usedChange) => {
+const updateLeaveBalanceByUserAndType = async ({ userId, leaveTypeId, year, balanceChange, usedChange }) => {
   const leaveBalance = await leaveBalanceRepo.findOne({ where: { userId, leaveTypeId, year } });
 
   if (!leaveBalance) return null;
 
-  leaveBalance.balance +=  Number(balanceChange);
-  leaveBalance.used +=  Number(usedChange)
+  if (balanceChange !== null) {
+    leaveBalance.balance += Number(balanceChange);
+  }
+  leaveBalance.used += Number(usedChange);
 
   return leaveBalanceRepo.save(leaveBalance);
 };

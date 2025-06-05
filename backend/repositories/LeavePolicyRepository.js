@@ -1,6 +1,5 @@
 const { AppDataSource } = require('../config/db');
 const { LeavePolicy } = require('../entities/LeavePolicy');
-const { LeaveStatus } = require('../entities/LeaveRequest');
 const { Role } = require('../entities/Role');
 
 const leavePolicyRepo = AppDataSource.getRepository(LeavePolicy);
@@ -43,6 +42,7 @@ const getAllPolicy = async () => {
   return Array.from(leaveTypeMap.values());
 };
 
+//Create Policy
 const createLeavePolicy = async ({ id, accrual_per_year, roleId }) => {
   const validRoles = await roleRepo
     .createQueryBuilder("role")
@@ -70,8 +70,8 @@ const createLeavePolicy = async ({ id, accrual_per_year, roleId }) => {
   return { inserted: insertData.length };
 };
 
+//Update Policy
 const updateLeave = async ({ id, accrual_per_year, roleId }) => {
-
   await leavePolicyRepo
     .createQueryBuilder()
     .update()

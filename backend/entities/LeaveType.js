@@ -1,6 +1,5 @@
 const { EntitySchema } = require("typeorm");
 
-// Schema for LeaveType entity
 const LeaveType = new EntitySchema({
   name: "LeaveType",
   tableName: "leave_types",
