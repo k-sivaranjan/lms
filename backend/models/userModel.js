@@ -1,44 +1,40 @@
-const pool = require('../config/db');
+const {
+  getAllUsers: repoGetAllUsers,
+  createUser: repoCreateUser,
+  getUserByEmail: repoGetUserByEmail,
+  getUserById: repoGetUserById,
+  updatePasswordByid:repoUpdatePasswordById
+} = require('../repositories/UserRepository');
 
-const createUser = async (name, email, password, role, managerId) => {
-  try {
-    const query = `
-      INSERT INTO users (name, email, password, role, manager_id, created_at)
-      VALUES (?, ?, ?, ?, ?, NOW())
-    `;
-    const [userResult] = await pool.execute(query, [name, email, password, role, managerId]);
-    const userId = userResult.insertId;
-
-    const leaveTypesQuery = 'SELECT * FROM leave_types';
-    const [leaveTypes] = await pool.execute(leaveTypesQuery);
-
-    const leaveBalanceQuery = `
-      INSERT INTO leave_balances (user_id, leave_type_id, year, balance, used)
-      VALUES (?, ?, YEAR(CURDATE()), ?, 0)
-    `;
-
-    const leaveBalancePromises = leaveTypes.map(leaveType => 
-      pool.execute(leaveBalanceQuery, [userId, leaveType.id, leaveType.max_per_year])
-    );
-
-    await Promise.all(leaveBalancePromises);
-    return userResult;
-  } catch (err) {
-    console.error("Error in createUser function:", err);
-    throw err;
-  }
-};
-
-const getUserByEmail = async (email) => {
-  const query = 'SELECT * FROM users WHERE email = ?';
-  const [rows] = await pool.execute(query, [email]);
-  return rows[0];
-};
-
+// Get all users from the database
 const getAllUsers = async () => {
-  const query = 'SELECT id, name, email, role FROM users';
-  const [rows] = await pool.execute(query);
-  return rows;
+  return repoGetAllUsers();
 };
 
-module.exports = { createUser, getUserByEmail, getAllUsers };
+// Create a new user in the database
+const createUser = async ({name, email, password, roleId, managerId}) => {
+  return repoCreateUser({name, email, password, roleId, managerId});
+};
+
+// Get a user by their email address
+const getUserByEmail = async (email) => {
+  return repoGetUserByEmail(email);
+};
+
+// Get a user by their ID
+const getUserById = async (id) => {
+  return repoGetUserById(id);
+};
+
+//Update Old Password to New
+const updatePasswordByid = async(userId,password) =>{
+  return repoUpdatePasswordById(userId,password)
+}
+
+module.exports = {
+  getAllUsers,
+  createUser,
+  getUserByEmail,
+  updatePasswordByid,
+  getUserById
+};

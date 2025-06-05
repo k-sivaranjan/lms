@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../userContext';
-import axios from 'axios';
+import { useUser } from '../utils/userContext';
+import {apiPostWithRetry} from "../utils/api"
 import '../styles/login.css';
 
 function Login() {
@@ -14,11 +14,10 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', {
-        email,
-        password
-      });
-      login(res.data.user);
+      const res = await apiPostWithRetry('/auth/login', { email, password });
+      
+      login(res.data.data.user);
+      localStorage.setItem('token', res.data.data.token);
       navigate('/');
     } catch (error) {
       if (error.response) {
@@ -28,7 +27,6 @@ function Login() {
       }
     }
   };
-  
 
   return (
     <div className="login-container">
@@ -37,11 +35,23 @@ function Login() {
       <form onSubmit={handleSubmit} className="login-form">
         <div className="form-group">
           <label>Email:</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="form-input" />
+          <input 
+            type="email" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            required 
+            className="form-input" 
+          />
         </div>
         <div className="form-group">
           <label>Password:</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="form-input" />
+          <input 
+            type="password" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            required 
+            className="form-input" 
+          />
         </div>
         <button type="submit" className="submit-button">Login</button>
       </form>

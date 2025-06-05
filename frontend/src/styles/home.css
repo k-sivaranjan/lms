@@ -1,19 +1,65 @@
 .employee-home {
+  font-family: 'Times New Roman';
   width: 90vw;
   margin: 0 auto;
   padding: 20px;
   background-color: #ffffff;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  font-family: Arial, sans-serif;
 }
 
-.welcome-message {
+.content-container {
+  min-height: 400px;
+}
+
+.no-requests,
+.no-calendar {
   text-align: center;
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #333;
+  padding: 40px 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.no-requests h3,
+.no-calendar h3 {
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.no-requests p,
+.no-calendar p {
+  color: #888;
+}
+
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f7f9fb;
+  border-bottom: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.chart-box {
+  flex: 1;
+  background-color: #f9f9f9;
+  padding: 20px;
+  height: 350px;
+  overflow: auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.team-members {
+  flex: 1;
+  background-color: #f9f9f9;
+  padding: 20px;
+  height: 250px;
+  overflow: auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .leave-balance, .leave-history {
@@ -54,10 +100,6 @@
   cursor: pointer;
 }
 
-.request-leave-button:hover {
-  background-color: #218838;
-}
-
 .leave-balance-table {
   margin-top: 10px;
   border-collapse: collapse;
@@ -88,7 +130,7 @@
   margin: 10px 0;
 }
 
-.approve-btn{
+.approve-btn {
   padding: 10px;
   width: 100px;
   font-size: 16px;
@@ -100,26 +142,76 @@
   cursor: pointer;
 }
 
-.reject-btn{
+.reject-btn {
   background-color: red;
 }
 
-.logout-button {
-  background-color: #f44336;
-  color: white;
-  padding: 8px 14px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-left: auto;
-  margin-top: 10px;
-}
-.logout-button:hover {
-  background-color: #d32f2f;
+@media (max-width: 1024px) {
+  .charts-container {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .chart-box,
+  .team-members {
+    width: 100%;
+    height: auto;
+  }
+
+  .leave-balance-table,
+  .scrollable-table table {
+    font-size: 14px;
+  }
+
+  .request-leave-button,
+  .approve-btn,
+  .reject-btn {
+    width: 100%;
+    font-size: 15px;
+  }
 }
 
-.home-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+@media (max-width: 768px) {
+  .leave-balance-table,
+  .scrollable-table table {
+    font-size: 13px;
+  }
+
+  .approve-btn,
+  .reject-btn {
+    font-size: 14px;
+    padding: 8px;
+    width: 90px;
+  }
+}
+
+@media (max-width: 480px) {
+  .employee-home {
+    padding: 12px;
+  }
+
+  .chart-box,
+  .team-members {
+    padding: 12px;
+    height: auto;
+  }
+
+  .leave-balance-table,
+  .scrollable-table table {
+    font-size: 12px;
+  }
+
+  .request-leave-button {
+    font-size: 14px;
+    padding: 8px;
+    width: 100%;
+  }
+
+  .approve-btn,
+  .reject-btn {
+    font-size: 13px;
+    padding: 6px;
+    width: 100%;
+    margin: 8px 0;
+  }
 }

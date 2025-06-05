@@ -44,7 +44,6 @@
   font-size: 14px;
   border-radius: 4px;
   border: 1px solid #ccc;
-  transition: border-color 0.2s ease-in-out;
 }
 
 .form-input:focus {
@@ -60,9 +59,51 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
 }
 
 .submit-button:hover {
   background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .login-container {
+    width: 90%;
+    margin: 80px auto;
+    padding: 25px;
+  }
+
+  .login-title {
+    font-size: 22px;
+  }
+
+  .submit-button {
+    font-size: 15px;
+    padding: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    width: 95%;
+    margin: 60px auto;
+    padding: 20px;
+  }
+
+  .login-title {
+    font-size: 20px;
+  }
+
+  .form-input {
+    font-size: 13px;
+    padding: 7px;
+  }
+
+  .submit-button {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .error-message {
+    font-size: 13px;
+  }
 }

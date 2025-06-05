@@ -1,60 +1,148 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useUser } from '../userContext';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/request.css'; 
+import { useUser } from '../utils/userContext';
+import api from "../utils/api";
+import { Toast } from './Toast';
+import '../styles/request.css';
 
-function LeaveRequest({ onRequestSuccess }) {
+function LeaveRequest() {
   const { user } = useUser();
   const navigate = useNavigate();
 
+  const [leaveDetails, setLeaveDetails] = useState([]);
   const [leaveTypeId, setLeaveTypeId] = useState('');
   const [leaveTypes, setLeaveTypes] = useState([]);
+  const [leaveHistory, setLeaveHistory] = useState([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isHalfDay, setIsHalfDay] = useState(false);
   const [halfDayType, setHalfDayType] = useState('');
   const [reason, setReason] = useState('');
+  const [totalDays, setTotalDays] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch leave types from the API
-    axios.get('http://localhost:5000/api/leave/types')
-      .then((res) => setLeaveTypes(res.data))
-      .catch((err) => console.error('Error fetching leave types:', err));
-  }, []);
+    fetchBalance();
+    fetchLeaveTypes();
+    fetchLeaveHistory()
+  }, [user]);
+
+  const fetchLeaveTypes = async () => {
+    try {
+      const res = await api.get(`/leave/types/${user.id}`);
+      setLeaveTypes(res.data.leaveTypes);
+    } catch (err) {
+      setError("Error fetching leave types.");
+    }
+  };
+
+  const fetchBalance = async () => {
+    if (!user || user.role.name === "admin") {
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await api.get(`/leave/balance/${user.id}`);
+      setLeaveDetails(res.data.leaveDetails);
+    } catch {
+      setError('Error fetching leave balance');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLeaveHistory = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.get(`/leave/history/${user.id}`);
+      setLeaveHistory(res.data.leaveHistory);
+
+    } catch {
+      setError('Error fetching leave history');
+      Toast.error('Error fetching leave history');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const calculateLeaveDays = () => {
+      if (!startDate || !endDate) {
+        setTotalDays(0);
+        return;
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) {
+        setTotalDays(0);
+        return;
+      }
+
+      let dayCount = 0;
+      let current = new Date(start);
+      while (current <= end) {
+        const dayOfWeek = current.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          dayCount++;
+        }
+        current.setDate(current.getDate() + 1);
+      }
+
+      setTotalDays(isHalfDay ? 0.5 : dayCount);
+    };
+
+    calculateLeaveDays();
+  }, [startDate, endDate, isHalfDay]);
+
+  const selectedBalance = leaveDetails.find(b => b.leave_id === parseInt(leaveTypeId));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!leaveTypeId || !startDate || !endDate || !reason || (isHalfDay && !halfDayType)) {
-      alert('Please fill all required fields.');
+      Toast.error('Please fill all required fields.');
       return;
     }
 
     if (new Date(endDate) < new Date(startDate)) {
-      alert('End date cannot be before start date.');
+      Toast.error('End date cannot be before start date.');
+      return;
+    }
+
+    const newStart = new Date(startDate);
+    const newEnd = new Date(endDate);
+
+    const hasOverlap = leaveHistory.some((leave) => {
+      if (leave.status === 7) return false;
+
+      const existingStart = new Date(leave.start_date);
+      const existingEnd = new Date(leave.end_date);
+
+      return !(newEnd < existingStart || newStart > existingEnd);
+    });
+
+    if (hasOverlap) {
+      Toast.error("You already have a leave applied for these dates.");
       return;
     }
 
     try {
-      const res = await axios.post('http://localhost:5000/api/leave/request', {
+      const res = await api.post('/leave/request', {
         userId: user.id,
+        managerId: user.managerId,
         leaveTypeId,
         startDate,
         endDate,
         isHalfDay,
         halfDayType: isHalfDay ? halfDayType : null,
-        reason
+        reason,
+        totalDays
       });
 
-      const requestId = res.data.result?.insertId;
-
-      if (parseInt(leaveTypeId) === 9 && requestId) {
-        await axios.put(`http://localhost:5000/api/leave/approve/${requestId}`);
-      }
-
-      alert('Leave requested successfully');
-      onRequestSuccess?.();
+      Toast.success('Leave requested successfully');
 
       setLeaveTypeId('');
       setStartDate('');
@@ -63,20 +151,29 @@ function LeaveRequest({ onRequestSuccess }) {
       setHalfDayType('');
       setReason('');
 
-      navigate('/');
+      navigate("/");
     } catch (err) {
-      console.error('Error submitting leave request:', err);
-      alert('Error submitting leave request');
+      Toast.error(err.response?.data?.error || "Error submitting leave request.");
     }
   };
 
-  const getLeaveDays = () => {
-    if (!startDate || !endDate) return 0;
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
-    return days > 0 ? days : 0;
-  };
+
+  if (loading) {
+    return (
+      <div className="loading">
+        <p>Loading leave request form...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-message">
+        <h3>Error</h3>
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="leave-request-form">
@@ -95,12 +192,24 @@ function LeaveRequest({ onRequestSuccess }) {
         ))}
       </select>
 
+      {leaveTypeId && selectedBalance && (
+        <p className="leave-request-balance">
+          You have <span className='leave'>{selectedBalance.balance} days</span> balance for {selectedBalance.leave_type}
+        </p>
+      )}
+
       <label className="leave-request-label">Start Date:</label>
       <input
         className="leave-request-input"
         type="date"
         value={startDate}
-        onChange={(e) => setStartDate(e.target.value)}
+        onChange={(e) => {
+          const selected = e.target.value;
+          setStartDate(selected);
+          if (!endDate || new Date(endDate) < new Date(selected)) {
+            setEndDate(selected);
+          }
+        }}
         required
       />
 
@@ -111,6 +220,7 @@ function LeaveRequest({ onRequestSuccess }) {
         value={endDate}
         min={startDate}
         onChange={(e) => setEndDate(e.target.value)}
+        disabled={!startDate}
         required
       />
 
@@ -140,7 +250,7 @@ function LeaveRequest({ onRequestSuccess }) {
         </>
       )}
 
-      <label className="leave-request-label">Reason:</label>
+      <label className="leave-request-label">Add Comments:</label>
       <textarea
         className="leave-request-textarea"
         value={reason}
@@ -149,7 +259,7 @@ function LeaveRequest({ onRequestSuccess }) {
       />
 
       <p className="leave-request-days">
-        Total Leave Days: {isHalfDay ? "0.5 (Half Day)" : getLeaveDays()}
+        Total Leave Days: {totalDays}
       </p>
 
       <div className="leave-request-button-container">
