@@ -1,0 +1,217 @@
+.employee-home {
+  font-family: 'Times New Roman';
+  width: 90vw;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.content-container {
+  min-height: 400px;
+}
+
+.no-requests,
+.no-calendar {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.no-requests h3,
+.no-calendar h3 {
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.no-requests p,
+.no-calendar p {
+  color: #888;
+}
+
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f7f9fb;
+  border-bottom: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.chart-box {
+  flex: 1;
+  background-color: #f9f9f9;
+  padding: 20px;
+  height: 350px;
+  overflow: auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.team-members {
+  flex: 1;
+  background-color: #f9f9f9;
+  padding: 20px;
+  height: 250px;
+  overflow: auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.leave-balance, .leave-history {
+  margin-bottom: 30px;
+}
+
+.leave-balance p, .leave-history p {
+  font-size: 16px;
+  color: #555;
+}
+
+.scrollable-table {
+  max-height: 250px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.scrollable-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.scrollable-table th, .scrollable-table td {
+  padding: 8px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+.request-leave-button {
+  padding: 10px;
+  width: 200px;
+  font-size: 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  margin: 10px;
+  cursor: pointer;
+}
+
+.leave-balance-table {
+  margin-top: 10px;
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 600px;
+}
+
+.leave-balance-table th, .leave-balance-table td {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+.leave-balance-table th {
+  background-color: #f5f5f5;
+}
+
+.charts-container {
+  display: flex;
+  gap: 15px;
+  margin: 15px 0;
+  flex-wrap: wrap;
+}
+
+.chart-box {
+  flex: 1 1 auto;
+  padding: 8px;
+  margin: 10px 0;
+}
+
+.approve-btn {
+  padding: 10px;
+  width: 100px;
+  font-size: 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  margin: 10px;
+  cursor: pointer;
+}
+
+.reject-btn {
+  background-color: red;
+}
+
+@media (max-width: 1024px) {
+  .charts-container {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .chart-box,
+  .team-members {
+    width: 100%;
+    height: auto;
+  }
+
+  .leave-balance-table,
+  .scrollable-table table {
+    font-size: 14px;
+  }
+
+  .request-leave-button,
+  .approve-btn,
+  .reject-btn {
+    width: 100%;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .leave-balance-table,
+  .scrollable-table table {
+    font-size: 13px;
+  }
+
+  .approve-btn,
+  .reject-btn {
+    font-size: 14px;
+    padding: 8px;
+    width: 90px;
+  }
+}
+
+@media (max-width: 480px) {
+  .employee-home {
+    padding: 12px;
+  }
+
+  .chart-box,
+  .team-members {
+    padding: 12px;
+    height: auto;
+  }
+
+  .leave-balance-table,
+  .scrollable-table table {
+    font-size: 12px;
+  }
+
+  .request-leave-button {
+    font-size: 14px;
+    padding: 8px;
+    width: 100%;
+  }
+
+  .approve-btn,
+  .reject-btn {
+    font-size: 13px;
+    padding: 6px;
+    width: 100%;
+    margin: 8px 0;
+  }
+}

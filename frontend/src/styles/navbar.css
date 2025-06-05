@@ -1,0 +1,148 @@
+/* NAVBAR HEADER SHARED */
+.home-header-enhanced {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.welcome-message {
+  color: white;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.welcome-message span {
+  font-weight: bold;
+  color: #ffeb3b;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.logout-button,
+.profile-btn {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.logout-button {
+  background-color: rgba(244, 67, 54, 0.8);
+}
+
+/* NAVBAR BUTTON GROUP */
+.home-navbar {
+  display: flex;
+  gap: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 8px;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nav-btn {
+  padding: 12px 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  flex: 1;
+  text-align: center;
+  min-width: 100px;
+}
+
+.nav-btn.active {
+  background-color: white;
+  color: #667eea;
+  border-color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* RESPONSIVE NAVBAR */
+@media (max-width: 768px) {
+  .header-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .welcome-message {
+    font-size: 20px;
+  }
+
+  .header-buttons {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .profile-btn,
+  .logout-button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .home-navbar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .nav-btn {
+    font-size: 13px;
+    padding: 10px 14px;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-header-enhanced {
+    padding: 16px;
+  }
+
+  .welcome-message {
+    font-size: 18px;
+    text-align: center;
+  }
+
+  .home-navbar {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .nav-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .logout-button {
+    font-size: 13px;
+    padding: 6px;
+    width: 100%;
+    margin: 8px 0;
+  }
+}

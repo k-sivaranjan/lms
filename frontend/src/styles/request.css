@@ -1,0 +1,109 @@
+.leave-request-form {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.leave-request-form h3 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.leave-request-label {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.leave-request-input,
+.leave-request-textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0 20px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #fff;
+}
+
+.leave-request-textarea {
+  height: 120px;
+  resize: vertical;
+}
+
+.leave-request-checkbox-label {
+  margin-top: 10px;
+}
+
+.leave-request-checkbox {
+  margin-right: 10px;
+}
+
+.leave{
+  color: red;
+}
+
+.loading, .error-message {
+  text-align: center;
+  padding: 1rem;
+  color: #444;
+}
+
+.error-message {
+  color: red;
+  background-color: #ffe6e6;
+  border: 1px solid red;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.leave-request-submit-btn {
+  display: block;
+  margin: 20px auto 0 auto;
+  padding: 10px 30px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  width: auto;
+  height: auto;
+  min-width: 150px;
+}
+
+.leave-request-submit-btn:hover {
+  background-color: #45a049;
+}
+
+.leave-request-input:focus,
+.leave-request-textarea:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+@media (max-width: 600px) {
+  .leave-request-form {
+    max-width: 95%;
+    margin: 20px auto;
+    padding: 15px;
+  }
+
+  .leave-request-input,
+  .leave-request-textarea {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  .leave-request-submit-btn {
+    width: 100%;
+    min-width: unset;
+    padding: 12px 0;
+    font-size: 18px;
+  }
+}
