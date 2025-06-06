@@ -11,7 +11,8 @@ function Calendar() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [teamLeaveData, setTeamLeaveData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [teamLoading, setTeamLoading] = useState(true);
+  const [leaveDataLoading, setLeaveDataLoading] = useState(true);
 
   const leaveTypeColors = {
     'Casual Leave': '#4CAF50',
@@ -42,15 +43,16 @@ function Calendar() {
     try {
       const res = await api.get('/auth/users');
       const currentManagerId = user.id;
-      let teamMembers;
-      if (user.role.name !== 'admin') {
-        teamMembers = res.data.data.users.filter(u => u.managerId === currentManagerId);
-      } else {
-        teamMembers = res.data.data.users;
-      }
-      setTeamMembers(teamMembers);
+      let members = user.role.name !== 'admin'
+        ? res.data.data.users.filter(u => u.managerId === currentManagerId)
+        : res.data.data.users;
+
+      setTeamMembers(members);
     } catch (error) {
       Toast.error("Error fetching users");
+      setTeamMembers([]);
+    } finally {
+      setTeamLoading(false);
     }
   };
 
@@ -73,6 +75,7 @@ function Calendar() {
 
   useEffect(() => {
     const loadData = async () => {
+      setTeamLoading(true);
       await fetchAllUsersinTeam();
     };
     loadData();
@@ -80,7 +83,11 @@ function Calendar() {
 
   useEffect(() => {
     const loadTeamLeaveData = async () => {
-      setLoading(true);
+      if (teamMembers.length === 0) {
+        setLeaveDataLoading(false);
+        return;
+      }
+      setLeaveDataLoading(true);
       try {
         const data = await fetchTeamLeaveData(
           teamMembers.map(member => member.id),
@@ -89,7 +96,7 @@ function Calendar() {
         );
         setTeamLeaveData(data || []);
       } finally {
-        setLoading(false);
+        setLeaveDataLoading(false);
       }
     };
 
@@ -112,8 +119,6 @@ function Calendar() {
   };
 
   const renderCalendarBody = () => {
-    if (!teamMembers || teamMembers.length === 0) return null;
-
     return teamMembers.map(member => {
       const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
       const memberLeaves = teamLeaveData.filter(leave => leave.lr_user_id === member.id);
@@ -194,7 +199,7 @@ function Calendar() {
         </div>
       </div>
 
-      {loading ? (
+      {(teamLoading || leaveDataLoading) ? (
         <div className="spinner-container">
           <div className="dot-spinner">
             <div className="dot"></div>
