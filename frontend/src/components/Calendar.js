@@ -136,8 +136,20 @@ function Calendar() {
           const current = formatDate(currentDate);
           const start = formatDate(new Date(leave.lr_start_date));
           const end = formatDate(new Date(leave.lr_end_date));
+
+          console.log('🧪 Checking leave: ', {
+            member: member.name,
+            current,
+            start,
+            end,
+            matches: current >= start && current <= end,
+            originalStart: leave.lr_start_date,
+            originalEnd: leave.lr_end_date,
+          });
+
           return current >= start && current <= end && !isWeekend;
         });
+
 
         return (
           <td key={`${member.id}-${day}`} className={`calendar-cell ${isWeekend ? 'weekend' : ''}`}>
