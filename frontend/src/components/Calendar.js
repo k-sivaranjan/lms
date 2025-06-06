@@ -130,14 +130,13 @@ function Calendar() {
         const dayOfWeek = currentDate.getDay();
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-        const parseLocalDate = (dateStr) => {
-          return dateStr.includes('T') ? new Date(dateStr) : new Date(dateStr + 'T00:00:00');
-        };
+        const formatDate = (d) => d.toISOString().split('T')[0];
 
         const leaveOnThisDay = memberLeaves.find(leave => {
-          const startDate = parseLocalDate(leave.lr_start_date);
-          const endDate = parseLocalDate(leave.lr_end_date);
-          return currentDate >= startDate && currentDate <= endDate && !isWeekend;
+          const current = formatDate(currentDate);
+          const start = formatDate(new Date(leave.lr_start_date));
+          const end = formatDate(new Date(leave.lr_end_date));
+          return current >= start && current <= end && !isWeekend;
         });
 
         return (
