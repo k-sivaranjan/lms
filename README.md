@@ -125,3 +125,11 @@ A Leave Management System built with **React**, **Node.js**, **Express**, and **
   - Optimized indexes and relations
 
 ---
+
+## ⚙️ Database Setup with Auto Seeder
+
+This project includes **seeder scripts**, so when you run the backend with `synchronize: true` enabled in your TypeORM configuration:
+
+- You just need to create a db and mention that in env
+- All required tables will be created automatically
+- Initial data like roles, leave types, and default admin user will be inserted automatically
