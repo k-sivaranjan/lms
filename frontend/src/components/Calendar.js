@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '../utils/userContext';
-import { Toast } from "./Toast"
+import { Toast } from "./Toast";
 import api from "../utils/api";
 import '../styles/calendar.css';
 import '../styles/loader.css';
@@ -33,10 +33,14 @@ function Calendar() {
     return new Date(year, month + 1, 0).getDate();
   };
 
+  const parseLocalDate = (dateStr) => {
+    const [year, month, day] = dateStr.split('T')[0].split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   const fetchAllUsersinTeam = async () => {
     try {
       const res = await api.get('/auth/users');
-
       const currentManagerId = user.id;
       let teamMembers;
       if (user.role.name !== 'admin') {
@@ -46,8 +50,7 @@ function Calendar() {
       }
       setTeamMembers(teamMembers);
     } catch (error) {
-      console.error("Error fetching users:", error);
-      Toast.error("Error fetching users")
+      Toast.error("Error fetching users");
     }
   };
 
@@ -63,8 +66,7 @@ function Calendar() {
       });
       return response.data.leaveRequests;
     } catch (error) {
-      console.error("Error fetching team leave data:", error);
-      Toast.error("Error fetching team leave data")
+      Toast.error("Error fetching team leave data");
       return [];
     }
   };
@@ -91,9 +93,6 @@ function Calendar() {
           selectedYear
         );
         setTeamLeaveData(data || []);
-      } catch (error) {
-        console.error("Error fetching team leave data:", error);
-        Toast.error("Error fetching team leave data")
       } finally {
         setLoading(false);
       }
@@ -130,26 +129,11 @@ function Calendar() {
         const dayOfWeek = currentDate.getDay();
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-        const formatDate = (d) => d.toISOString().split('T')[0];
-
         const leaveOnThisDay = memberLeaves.find(leave => {
-          const current = formatDate(currentDate);
-          const start = formatDate(new Date(leave.lr_start_date));
-          const end = formatDate(new Date(leave.lr_end_date));
-
-          console.log('🧪 Checking leave: ', {
-            member: member.name,
-            current,
-            start,
-            end,
-            matches: current >= start && current <= end,
-            originalStart: leave.lr_start_date,
-            originalEnd: leave.lr_end_date,
-          });
-
-          return current >= start && current <= end && !isWeekend;
+          const startDate = parseLocalDate(leave.lr_start_date);
+          const endDate = parseLocalDate(leave.lr_end_date);
+          return currentDate >= startDate && currentDate <= endDate && !isWeekend;
         });
-
 
         return (
           <td key={`${member.id}-${day}`} className={`calendar-cell ${isWeekend ? 'weekend' : ''}`}>
@@ -243,6 +227,6 @@ function Calendar() {
       )}
     </div>
   );
-};
+}
 
 export default Calendar;
