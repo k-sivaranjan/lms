@@ -3,7 +3,7 @@ const {
   createUser: repoCreateUser,
   getUserByEmail: repoGetUserByEmail,
   getUserById: repoGetUserById,
-  updatePasswordByid:repoUpdatePasswordById
+  updatePasswordById:repoUpdatePasswordById
 } = require('../repositories/UserRepository');
 
 // Get all users from the database
