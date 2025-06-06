@@ -107,7 +107,7 @@ function Navbar() {
   return (
     <header className={headerClass}>
       <div className="header-top">
-        <h2 className={user.role.name === 'admin' ? 'welcome-title' : 'welcome-message'}>
+        <h2 className='welcome-message'>
           {user.role.name === 'admin' ? (
             <>Welcome <span>Admin</span>!</>
           ) : (

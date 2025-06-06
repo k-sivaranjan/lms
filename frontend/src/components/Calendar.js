@@ -80,11 +80,6 @@ function Calendar() {
 
   useEffect(() => {
     const loadTeamLeaveData = async () => {
-      if (!teamMembers || teamMembers.length === 0) {
-        setLoading(false);
-        return;
-      }
-
       setLoading(true);
       try {
         const data = await fetchTeamLeaveData(
