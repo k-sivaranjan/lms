@@ -1,31 +1,49 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '../utils/userContext';
 import api from "../utils/api";
+import '../styles/loader.css';
 
 function AllUsers() {
     const [usersOnLeaveToday, setUsersOnLeaveToday] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
     const { user } = useUser();
 
     useEffect(() => {
         if (user) {
-            fetchUsersOnLeaveToday();
-            fetchAllUsers();
+            fetchData();
         }
     }, [user]);
 
-    const fetchAllUsers = async () => {
-        const res = await api.get('/auth/users');
-        setAllUsers(res.data.data.users);
-    };
-    const fetchUsersOnLeaveToday = async () => {
-        const res = await api.get('/leave/on-leave-today');
-        if (!res.data) {
-            setUsersOnLeaveToday([]);
-        } else {
-            setUsersOnLeaveToday(res.data.users);
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const [resUsers, resLeave] = await Promise.all([
+                api.get('/auth/users'),
+                api.get('/leave/on-leave-today')
+            ]);
+
+            setAllUsers(resUsers.data.data.users);
+            setUsersOnLeaveToday(resLeave.data?.users || []);
+        } catch (err) {
+            console.error("Error fetching users:", err);
+        } finally {
+            setLoading(false);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="spinner-container">
+                <div className="dot-spinner">
+                    <div className="dot"></div>
+                    <div className="dot"></div>
+                    <div className="dot"></div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <section className="section-container">
             <h3>All Users</h3>
@@ -61,4 +79,4 @@ function AllUsers() {
     );
 }
 
-export default AllUsers
+export default AllUsers;

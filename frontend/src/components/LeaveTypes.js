@@ -7,6 +7,7 @@ function LeaveTypes() {
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [draftLeaves, setDraftLeaves] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [newLeave, setNewLeave] = useState({
     leaveName: '',
     maxPerYear: 0,
@@ -21,6 +22,7 @@ function LeaveTypes() {
 
   const fetchLeaveTypes = async () => {
     try {
+      setLoading(true);
       const res = await api.get('/leave/types');
 
       const drafts = {};
@@ -34,12 +36,14 @@ function LeaveTypes() {
           applicableFromRoleId: lt.maxRoleId
         };
       });
-      
+
       setLeaveTypes(res.data.leaveTypes);
       setDraftLeaves(drafts);
     } catch (err) {
       console.error('Error fetching leave types:', err);
       Toast.error('Failed to fetch leave types');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -109,6 +113,18 @@ function LeaveTypes() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="spinner-container">
+        <div className="dot-spinner">
+          <div className="dot"></div>
+          <div className="dot"></div>
+          <div className="dot"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="leave-policy-container">
       <div className="leave-types-grid leaves-section">
@@ -143,9 +159,7 @@ function LeaveTypes() {
                       onChange={(e) => handleChange(lt.leaveName, 'multiApprover', Number(e.target.value))}
                     >
                       {[0, 1, 2, 3].map((value) => (
-                        <option key={value} value={value}>
-                          {value}
-                        </option>
+                        <option key={value} value={value}>{value}</option>
                       ))}
                     </select>
                   </div>

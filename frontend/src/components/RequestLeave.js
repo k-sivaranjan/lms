@@ -4,6 +4,7 @@ import { useUser } from '../utils/userContext';
 import api from "../utils/api";
 import { Toast } from './Toast';
 import '../styles/request.css';
+import '../styles/loader.css';
 
 function LeaveRequest() {
   const { user } = useUser();
@@ -160,8 +161,12 @@ function LeaveRequest() {
 
   if (loading) {
     return (
-      <div className="loading">
-        <p>Loading leave request form...</p>
+      <div className="spinner-container">
+        <div className="dot-spinner">
+          <div className="dot"></div>
+          <div className="dot"></div>
+          <div className="dot"></div>
+        </div>
       </div>
     );
   }

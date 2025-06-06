@@ -1,13 +1,18 @@
 import { Navigate } from 'react-router-dom';
 import { useUser } from '../utils/userContext';
+import '../styles/loader.css';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useUser();
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <p>Loading...</p>
+      <div className="spinner-container">
+        <div className="dot-spinner">
+          <div className="dot"></div>
+          <div className="dot"></div>
+          <div className="dot"></div>
+        </div>
       </div>
     );
   }

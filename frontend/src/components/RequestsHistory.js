@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '../utils/userContext';
-import {Toast} from "./Toast"
+import { Toast } from "./Toast"
 import api from "../utils/api";
 import '../styles/history.css';
+import '../styles/loader.css';
 
 const statusMap = {
   1: "Pending",
@@ -61,9 +62,14 @@ function RequestsHistory() {
 
   if (loading) {
     return (
-      <div className="loading">
-        <p>Loading team leave request history...</p>
+      <div className="spinner-container">
+        <div className="dot-spinner">
+          <div className="dot"></div>
+          <div className="dot"></div>
+          <div className="dot"></div>
+        </div>
       </div>
+
     );
   }
 

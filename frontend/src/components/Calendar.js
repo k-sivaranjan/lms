@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '../utils/userContext';
-import {Toast} from "./Toast"
+import { Toast } from "./Toast"
 import api from "../utils/api";
 import '../styles/calendar.css';
+import '../styles/loader.css';
 
-function Calendar () {
+function Calendar() {
   const { user } = useUser();
   const [teamMembers, setTeamMembers] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
@@ -35,7 +36,7 @@ function Calendar () {
   const fetchAllUsersinTeam = async () => {
     try {
       const res = await api.get('/auth/users');
-      
+
       const currentManagerId = user.id;
       let teamMembers;
       if (user.role.name !== 'admin') {
@@ -200,7 +201,13 @@ function Calendar () {
       </div>
 
       {loading ? (
-        <p className="loading-message">Loading calendar data...</p>
+        <div className="spinner-container">
+          <div className="dot-spinner">
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </div>
+        </div>
       ) : (
         <>
           <div className="calendar-table-container">

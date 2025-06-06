@@ -87,7 +87,13 @@ function History() {
   return (
     <div className="leave-history-container">
       {loading ? (
-        <p>Loading leave history...</p>
+        <div className="spinner-container">
+          <div className="dot-spinner">
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </div>
+        </div>
       ) : error ? (
         <p className="error">{error}</p>
       ) : leaveHistory.length === 0 ? (
@@ -144,24 +150,24 @@ function History() {
             {(selectedLeave.status !== 6 &&
               selectedLeave.status !== 7 &&
               new Date(selectedLeave.start_date) > new Date()) && (
-              <>
-                <label htmlFor="cancelComment"><strong>Add Comment:</strong></label>
-                <textarea
-                  id="cancelComment"
-                  value={actionComment}
-                  onChange={(e) => setActionComment(e.target.value)}
-                  placeholder="Enter reason for cancelling leave..."
-                  rows={3}
-                  style={{ width: '100%', marginBottom: '1rem' }}
-                />
-                <button
-                  onClick={() => handleCancel(selectedLeave.id)}
-                  className="cancel-button"
-                >
-                  Cancel Leave
-                </button>
-              </>
-            )}
+                <>
+                  <label htmlFor="cancelComment"><strong>Add Comment:</strong></label>
+                  <textarea
+                    id="cancelComment"
+                    value={actionComment}
+                    onChange={(e) => setActionComment(e.target.value)}
+                    placeholder="Enter reason for cancelling leave..."
+                    rows={3}
+                    style={{ width: '100%', marginBottom: '1rem' }}
+                  />
+                  <button
+                    onClick={() => handleCancel(selectedLeave.id)}
+                    className="cancel-button"
+                  >
+                    Cancel Leave
+                  </button>
+                </>
+              )}
 
             <button onClick={closeModal} className="close-button" style={{ marginTop: '1rem' }}>
               Close

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '../utils/userContext';
 import api from '../utils/api';
 import { Toast } from './Toast';
+import '../styles/loader.css';
 
 const statusMap = {
   1: "Pending",
@@ -73,7 +74,13 @@ function IncomingRequests() {
     }));
   };
 
-  if (loading) return <p>Loading leave requests...</p>;
+  if (loading) return (<div className="spinner-container">
+    <div className="dot-spinner">
+      <div className="dot"></div>
+      <div className="dot"></div>
+      <div className="dot"></div>
+    </div>
+  </div>)
 
   if (!incomingRequests.length) {
     return (

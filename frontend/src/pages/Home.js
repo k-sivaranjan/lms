@@ -8,6 +8,7 @@ import {
   ResponsiveContainer, Tooltip as RechartsTooltip,
 } from 'recharts';
 import '../styles/home.css';
+import '../styles/loader.css';
 
 function Home() {
   const { user } = useUser();
@@ -60,7 +61,14 @@ function Home() {
   return (
     <div className="leave-balance">
       {loading ? (
-        <p>Loading leave balance...</p>
+        <div className="spinner-container">
+          <div className="dot-spinner">
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </div>
+        </div>
+
       ) : error ? (
         <p>{error}</p>
       ) : (
