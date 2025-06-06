@@ -33,11 +33,13 @@ const LeaveType = new EntitySchema({
       type: "one-to-many",
       target: "LeaveBalance",
       inverseSide: "leaveType",
+      onDelete: "CASCADE",
     },
     leavePolicies: {
       type: "one-to-many",
       target: "LeavePolicy",
       inverseSide: "leaveType",
+      onDelete: "CASCADE",
     }
   },
 });
