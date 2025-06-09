@@ -1,7 +1,9 @@
 import axios from 'axios';
+import {Toast} from "../components/Toast"
 
 const api = axios.create({
   baseURL: 'https://lms-v4vf.onrender.com/api',
+  // baseURL:"http://localhost:5000/api"  For Development
 });
 
 // Attach token automatically
@@ -14,6 +16,23 @@ api.interceptors.request.use((config) => {
 }, (error) => {
   return Promise.reject(error);
 });
+
+//Logout When toker expires
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+
+      Toast.error("Login to Continue")
+
+      window.location.href = '/login';
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 const retryRequest = async (request, retries = 3, delay = 1000) => {
   try {
