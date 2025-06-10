@@ -4,7 +4,7 @@ const { AppDataSource } = require('../config/db');
 const { createUser } = require('../models/userModel');
 
 const userQueue = new Queue('userQueue', {
-  redis: { port: 6379, host: '127.0.0.1' }
+  redis: { port: process.env.REDIS_PORT, host: process.env.REDIS_HOST,password:process.env.REDIS_PASSWORD } 
 });
 
 (async () => {
@@ -16,8 +16,8 @@ const userQueue = new Queue('userQueue', {
       
       try {
         for (const user of users) {
-          const { name, email, password, role, manager_id } = user;
-          await createUser(name, email, password, role, manager_id || null);
+          const { name, email, password, roleId, managerId } = user;
+          await createUser(name, email, password, roleId, managerId || null);
         }
         done();
       } catch (err) {

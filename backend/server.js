@@ -17,9 +17,8 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-app.use(cors({
-  origin: "https://lms-leave.vercel.app"
-}));
+app.use(cors());
+// app.use(cors({origin: "https://lms-leave.vercel.app"}));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/leave', leaveRoutes);

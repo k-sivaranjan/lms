@@ -101,7 +101,9 @@ const fetchAllUsers = async (req, res) => {
 };
 
 // Bulk Upload Many Users Via Excel Sheet
-const userQueue = new Queue('userQueue', { redis: { port: 6379, host: '127.0.0.1' } });
+const userQueue = new Queue('userQueue', {
+  redis: { port: process.env.REDIS_PORT, host: process.env.REDIS_HOST,password:process.env.REDIS_PASSWORD } 
+});
 
 // Helper function to chunk array into smaller arrays
 const chunkArray = (array, chunkSize) => {
