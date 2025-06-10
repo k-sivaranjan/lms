@@ -1,18 +1,22 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../utils/userContext';
-import {apiPostWithRetry} from "../utils/api"
+import { apiPostWithRetry } from "../utils/api";
 import '../styles/login.css';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useUser();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+    
     try {
       const res = await apiPostWithRetry('/auth/login', { email, password });
       
@@ -25,8 +29,22 @@ function Login() {
       } else {
         setError('Server error. Please try again.');
       }
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="spinner-container">
+        <div className="dot-spinner">
+          <div className="dot"></div>
+          <div className="dot"></div>
+          <div className="dot"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="login-container">
@@ -53,7 +71,9 @@ function Login() {
             className="form-input" 
           />
         </div>
-        <button type="submit" className="submit-button">Login</button>
+        <button type="submit" className="submit-button" disabled={loading}>
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
       </form>
     </div>
   );
