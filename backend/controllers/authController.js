@@ -129,7 +129,7 @@ const uploadBulkUsers = async (req, res) => {
     for (const chunk of userChunks) {
       await userQueue.add({ users: chunk });
     }
-    res.status(200).json({ success: true, message: 'Users added successfully' });
+    res.status(200).json({ success: true, message: 'Worker started processing...' });
   } catch (error) {
     console.error('Upload bulk users error:', error);
     res.status(500).json({ success: false, message: 'Failed to process Excel file' });
