@@ -2,8 +2,9 @@ import axios from 'axios';
 import {Toast} from "../components/Toast"
 
 const api = axios.create({
-  baseURL: 'https://lms-v4vf.onrender.com/api',
-  // baseURL:"http://localhost:5000/api"  For Development
+  // baseURL: 'https://lms-v4vf.onrender.com/api',
+  baseURL:"http://localhost:5000/api"  
+  // For Development
 });
 
 // Attach token automatically

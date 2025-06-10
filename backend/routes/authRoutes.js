@@ -11,7 +11,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.post('/register', authMiddleware, roleMiddleware('admin'), register);
 router.post('/login', login);
 router.get('/users', authMiddleware, fetchAllUsers);
-router.post('/upload-users',roleMiddleware('admin'),uploadBulkUsers);
+router.post('/upload-users',upload.single('file'),authMiddleware,roleMiddleware('admin'),uploadBulkUsers);
 router.put('/password/:userId',authMiddleware,updatePassword)
 
 module.exports = router;
