@@ -16,8 +16,7 @@ const userQueue = new Queue('userQueue', {
       
       try {
         for (const user of users) {
-          const { name, email, password, roleId, managerId } = user;
-          await createUser(name, email, password, roleId, managerId || null);
+          await createUser(user);
         }
         done();
       } catch (err) {
