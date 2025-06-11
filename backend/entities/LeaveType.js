@@ -22,6 +22,12 @@ const LeaveType = new EntitySchema({
       type: Number,
       default: 1,
     },
+    deletedAt: {
+      name: "deleted_at",
+      type: "timestamp",
+      nullable: true,
+      deleteDate: true, 
+    }
   },
   relations: {
     leaveRequests: {

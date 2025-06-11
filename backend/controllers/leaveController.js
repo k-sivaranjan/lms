@@ -13,6 +13,7 @@ const {
   rejectLeave,
   addLeaveType,
   addLeavePolicy,
+  addLeaveBalance,
   updateLeaveType,
   updateLeavePolicy,
   deleteLeaveType
@@ -115,7 +116,7 @@ const fetchLeaveTypes = async (req, res) => {
 
     const grouped = {};
     leavePolicies.forEach(policy => {
-      const {leaveTypeId,leaveTypeName,maxPerYear,multiApprover,accrualPerYear,maxApplicableRoleId,applicableFromRole} = policy;
+      const { leaveTypeId, leaveTypeName, maxPerYear, multiApprover, accrualPerYear, maxApplicableRoleId, applicableFromRole } = policy;
       const existing = grouped[leaveTypeId];
       if (!existing || maxApplicableRoleId > existing.maxRoleId) {
         grouped[leaveTypeId] = {
@@ -150,7 +151,7 @@ const fetchLeaveTypes = async (req, res) => {
 // Request a leave
 const requestLeaveHandler = async (req, res) => {
   try {
-    const {userId,managerId,leaveTypeId,startDate,endDate,isHalfDay,halfDayType,reason,totalDays} = req.body;
+    const { userId, managerId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason, totalDays } = req.body;
 
     if (
       !userId || !managerId || !leaveTypeId || !startDate || !endDate ||
@@ -248,6 +249,7 @@ const createLeaveTypeHandler = async (req, res) => {
     const { name, maxPerYear, multiApprover, accrual_per_year, roleId } = req.body;
     const result = await addLeaveType({ name, maxPerYear, multiApprover });
     await addLeavePolicy({ id: result.id, accrual_per_year, roleId });
+    await addLeaveBalance({ leaveTypeId: result.id, balance: maxPerYear, used: 0 })
     res.status(200).json({ success: true, message: 'Leave type added successfully', result });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to add leave type' });

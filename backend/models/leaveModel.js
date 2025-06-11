@@ -289,6 +289,11 @@ const addLeavePolicy = async ({ id, accrual_per_year, roleId }) => {
   return leavePolicyRepository.createLeavePolicy({ id, accrual_per_year, roleId })
 }
 
+//Add Leave Balance
+const addLeaveBalance = async({leaveTypeId,balance,used})=>{
+  return leaveBalanceRepository.createLeaveBalance({leaveTypeId,balance,used})
+}
+
 // Update an existing leave type
 const updateLeaveType = async ({ id, name, maxPerYear, multiApprover = 1 }) => {
   return leaveTypeRepository.updateLeaveType({ id, name, maxPerYear, multiApprover });
@@ -301,7 +306,9 @@ const updateLeavePolicy = async ({ id, accrual_per_year, roleId }) => {
 
 // Delete a leave type
 const deleteLeaveType = async (id) => {
-  return leaveTypeRepository.deleteLeaveType(id);
+  leaveTypeRepository.deleteLeaveType(id);
+  leavePolicyRepository.softDeletePolicy(id);
+  leaveBalanceRepository.softDeleteLeaveBalance(id);
 };
 
 module.exports = {
@@ -321,6 +328,7 @@ module.exports = {
   rejectLeave,
   addLeaveType,
   addLeavePolicy,
+  addLeaveBalance,
   updateLeaveType,
   updateLeavePolicy,
   deleteLeaveType

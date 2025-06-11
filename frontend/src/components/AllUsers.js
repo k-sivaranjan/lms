@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '../utils/userContext';
 import api from "../utils/api";
+import {Toast} from "./Toast"
 
 function AllUsers() {
     const [usersOnLeaveToday, setUsersOnLeaveToday] = useState([]);
@@ -18,14 +19,26 @@ function AllUsers() {
         const res = await api.get('/auth/users');
         setAllUsers(res.data.data.users);
     };
+
     const fetchUsersOnLeaveToday = async () => {
         const res = await api.get('/leave/on-leave-today');
-        if (!res.data) {
-            setUsersOnLeaveToday([]);
-        } else {
-            setUsersOnLeaveToday(res.data.users);
+        setUsersOnLeaveToday(res.data?.users || []);
+    };
+
+    const handleDeleteUser = async (userId) => {
+        const confirm = window.confirm("Are you sure you want to delete this user?");
+        if (!confirm) return;
+
+        try {
+            const res = await api.delete(`/auth/users/${userId}`);
+            Toast.success(res.data.message)
+            fetchAllUsers();
+        } catch (error) {
+            console.error("Delete failed:", error);
+            Toast.error("Error deleting user.");
         }
     };
+
     return (
         <section className="section-container">
             <h3>All Users</h3>
@@ -34,8 +47,9 @@ function AllUsers() {
                     <thead>
                         <tr>
                             <th style={{ width: '10%' }}>ID</th>
-                            <th style={{ width: '60%' }}>Name & Status</th>
+                            <th style={{ width: '40%' }}>Name & Status</th>
                             <th style={{ width: '30%' }}>Role</th>
+                            <th style={{ width: '20%' }}>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -51,6 +65,14 @@ function AllUsers() {
                                         </button>
                                     </td>
                                     <td>{user.role.name}</td>
+                                    <td>
+                                        <button
+                                            className="delete-btn"
+                                            onClick={() => handleDeleteUser(user.id)}
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
                                 </tr>
                             );
                         })}
@@ -61,4 +83,4 @@ function AllUsers() {
     );
 }
 
-export default AllUsers
+export default AllUsers;

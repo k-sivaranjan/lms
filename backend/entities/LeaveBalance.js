@@ -27,6 +27,12 @@ const LeaveBalance = new EntitySchema({
     used: {
       type: "float",
     },
+    deletedAt: {
+      name: "deleted_at",
+      type: "timestamp",
+      nullable: true,
+      deleteDate: true, 
+    }
   },
   relations: {
     user: {

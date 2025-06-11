@@ -9,15 +9,19 @@ const roleRepo = AppDataSource.getRepository(Role);
 const getLeavePoliciesByRoleId = async (roleId) => {
   return leavePolicyRepo.find({
     where: {
-      role: { id: roleId }
+      role: { id: roleId },
+      deletedAt: null
     },
     relations: ['role', 'leaveType']
   });
 };
 
-//Get Policy
+// Get all latest leave policies
 const getAllPolicy = async () => {
   const allPolicies = await leavePolicyRepo.find({
+    where: {
+      deletedAt: null,
+    },
     relations: ['leaveType', 'role'],
   });
 
@@ -42,7 +46,7 @@ const getAllPolicy = async () => {
   return Array.from(leaveTypeMap.values());
 };
 
-//Create Policy
+// Create leave policy for role and all below roles (excluding admin)
 const createLeavePolicy = async ({ id, accrual_per_year, roleId }) => {
   const validRoles = await roleRepo
     .createQueryBuilder("role")
@@ -50,15 +54,15 @@ const createLeavePolicy = async ({ id, accrual_per_year, roleId }) => {
     .where("role.id <= :roleId", { roleId })
     .andWhere("role.id != 1")
     .getRawMany();
-    
+
   const roleIdsToInsert = validRoles.map(r => r.role_id);
-  
+
   const insertData = roleIdsToInsert.map(rId => ({
-    leaveType: id, 
+    leaveType: id,
     role: rId,
     accrual_per_year
   }));
-  
+
   if (insertData.length > 0) {
     await leavePolicyRepo
       .createQueryBuilder()
@@ -70,7 +74,7 @@ const createLeavePolicy = async ({ id, accrual_per_year, roleId }) => {
   return { inserted: insertData.length };
 };
 
-//Update Policy
+// Update existing policies and fill missing
 const updateLeave = async ({ id, accrual_per_year, roleId }) => {
   await leavePolicyRepo
     .createQueryBuilder()
@@ -105,13 +109,11 @@ const updateLeave = async ({ id, accrual_per_year, roleId }) => {
 
   let insertedCount = 0;
   if (missingRoleIds.length > 0) {
-    const insertData = missingRoleIds.map(roleIdToInsert => {
-      return {
-        leaveType: id,
-        role: roleIdToInsert,
-        accrual_per_year,
-      };
-    });
+    const insertData = missingRoleIds.map(roleIdToInsert => ({
+      leaveType: id,
+      role: roleIdToInsert,
+      accrual_per_year,
+    }));
 
     const insertResult = await leavePolicyRepo
       .createQueryBuilder()
@@ -122,23 +124,38 @@ const updateLeave = async ({ id, accrual_per_year, roleId }) => {
     insertedCount = insertResult.identifiers.length;
   }
 
-  const deleteResult = await leavePolicyRepo
-    .createQueryBuilder()
-    .delete()
-    .where("leave_type_id = :leaveTypeId", { leaveTypeId: id })
-    .andWhere("role_id > :roleId", { roleId })
-    .execute();
+  // Soft delete higher roles
+  const toDelete = await leavePolicyRepo
+    .createQueryBuilder("policy")
+    .leftJoinAndSelect("policy.role", "role")
+    .leftJoinAndSelect("policy.leaveType", "leaveType")
+    .where("policy.leaveType = :id", { id })
+    .andWhere("role.id > :roleId", { roleId })
+    .getMany();
+
+  if (toDelete.length > 0) {
+    for (const policy of toDelete) {
+      await leavePolicyRepo.softDelete(policy.id);
+    }
+  }
 
   return {
     updated: true,
     inserted: insertedCount,
-    deleted: deleteResult.affected || 0,
+    deleted: toDelete.length,
   };
+};
+
+// Soft delete specific policy
+const softDeletePolicy = async (id) => {
+  const result = await leavePolicyRepo.softDelete({ leaveType: { id } });
+  return result.affected !== 0;
 };
 
 module.exports = {
   getLeavePoliciesByRoleId,
   getAllPolicy,
   createLeavePolicy,
-  updateLeave
+  updateLeave,
+  softDeletePolicy
 };

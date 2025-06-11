@@ -40,6 +40,12 @@ const LeaveApproval = new EntitySchema({
       type: "timestamp",
       default: () => "CURRENT_TIMESTAMP",
     },
+    deletedAt: {
+      name: "deleted_at",
+      type: "timestamp",
+      nullable: true,
+      deleteDate: true,
+    }
   },
   relations: {
     leaveRequest: {

@@ -86,6 +86,12 @@ const LeaveRequest = new EntitySchema({
       default: () => "CURRENT_TIMESTAMP",
       onUpdate: "CURRENT_TIMESTAMP",
     },
+    deletedAt: {
+      name: "deleted_at",
+      type: "timestamp",
+      nullable: true,
+      deleteDate: true, 
+    }
   },
   relations: {
     user: {

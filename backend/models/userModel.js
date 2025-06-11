@@ -3,7 +3,8 @@ const {
   createUser: repoCreateUser,
   getUserByEmail: repoGetUserByEmail,
   getUserById: repoGetUserById,
-  updatePasswordById:repoUpdatePasswordById
+  updatePasswordById:repoUpdatePasswordById,
+  softDeleteUserById
 } = require('../repositories/UserRepository');
 
 // Get all users from the database
@@ -31,10 +32,16 @@ const updatePasswordByid = async(userId,password) =>{
   return repoUpdatePasswordById(userId,password)
 }
 
+//Delete user
+const deleteUser = async(userId)=>{
+  await softDeleteUserById(userId)
+}
+
 module.exports = {
   getAllUsers,
   createUser,
   getUserByEmail,
   updatePasswordByid,
-  getUserById
+  getUserById,
+  deleteUser
 };

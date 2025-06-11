@@ -3,22 +3,24 @@ const { LeaveApproval } = require('../entities/LeaveApproval');
 
 const leaveApprovalRepo = AppDataSource.getRepository(LeaveApproval);
 
-//Insert into Approval table
+// Bulk insert into Approval table
 const bulkInsertApprovals = async (approvals) => {
   return leaveApprovalRepo
     .createQueryBuilder()
     .insert()
-    .into('leave_approvals')
+    .into(LeaveApproval)
     .values(approvals)
     .execute();
 };
 
-//Get Approval by ID
+// Get Approval by ID
 const getApprovalById = async (approvalId) => {
-  return await leaveApprovalRepo.findOne({ where: { id: approvalId } });
+  return leaveApprovalRepo.findOne({
+    where: { id: approvalId ,deletedAt:null}
+  });
 };
 
-//Get approval by Request and approver
+// Get Approval by leave request and approver
 const getApprovalByRequestAndApprover = async (leaveRequestId, approverId) => {
   return leaveApprovalRepo.findOne({
     where: {
@@ -28,20 +30,19 @@ const getApprovalByRequestAndApprover = async (leaveRequestId, approverId) => {
   });
 };
 
-//Update approval status
+// Update approval status with comment and actedAt
 const updateApprovalStatus = async (approvalId, status, comments) => {
-  
   await leaveApprovalRepo.update(
     { id: approvalId },
     {
       status,
-      comments:comments,
+      comments,
       actedAt: new Date()
     }
   );
 };
 
-//Get Next Pending Approval
+// Get next pending approval based on level
 const getNextPendingApproval = async (leaveRequestId, nextLevel) => {
   return leaveApprovalRepo.findOne({
     where: {
@@ -52,10 +53,11 @@ const getNextPendingApproval = async (leaveRequestId, nextLevel) => {
   });
 };
 
+
 module.exports = {
   bulkInsertApprovals,
-  getApprovalByRequestAndApprover,
   getApprovalById,
+  getApprovalByRequestAndApprover,
   updateApprovalStatus,
-  getNextPendingApproval
+  getNextPendingApproval,
 };

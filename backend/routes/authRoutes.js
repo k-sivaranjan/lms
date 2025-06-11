@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { register, login, fetchAllUsers, updatePassword, uploadBulkUsers} = require('../controllers/authController.js');
+const { register, login, fetchAllUsers, updatePassword, uploadBulkUsers, deleteUserHandler} = require('../controllers/authController.js');
 const { authMiddleware, roleMiddleware } = require('../middleware/middleware');
 
 //Upload files into memory as buffers.
@@ -13,5 +13,6 @@ router.post('/login', login);
 router.get('/users', authMiddleware, fetchAllUsers);
 router.post('/upload-users',upload.single('file'),authMiddleware,roleMiddleware('admin'),uploadBulkUsers);
 router.put('/password/:userId',authMiddleware,updatePassword)
+router.delete('/users/:userId', authMiddleware,roleMiddleware('admin'),deleteUserHandler);
 
 module.exports = router;

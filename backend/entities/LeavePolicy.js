@@ -12,6 +12,12 @@ const LeavePolicy = new EntitySchema({
     accrual_per_year: {
       type: "int",
     },
+    deletedAt: {
+      name: "deleted_at",
+      type: "timestamp",
+      nullable: true,
+      deleteDate: true, 
+    }
   },
   relations: {
     role: {
@@ -29,4 +35,4 @@ const LeavePolicy = new EntitySchema({
   },
 });
 
-module.exports = { LeavePolicy};
+module.exports = { LeavePolicy };

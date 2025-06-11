@@ -25,6 +25,12 @@ const Role = new EntitySchema({
       type: Number,
       nullable: true,
     },
+    deletedAt: {
+      name: "deleted_at",
+      type: "timestamp",
+      nullable: true,
+      deleteDate: true, 
+    }
   },
   relations: {
     users: {

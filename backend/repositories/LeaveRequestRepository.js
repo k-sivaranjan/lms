@@ -5,6 +5,18 @@ const { LeaveApproval } = require('../entities/LeaveApproval');
 const leaveRequestRepo = AppDataSource.getRepository(LeaveRequest);
 const leaveApprovalRepo = AppDataSource.getRepository(LeaveApproval);
 
+// Soft delete a leave request
+const softDeleteLeaveRequest = async (id) => {
+  const result = await leaveRequestRepo.softDelete(id);
+  return result.affected !== 0;
+};
+
+// Restore a soft-deleted leave request
+const restoreLeaveRequest = async (id) => {
+  const result = await leaveRequestRepo.restore(id);
+  return result.affected !== 0;
+};
+
 // Get users on leave for the current day
 const getUsersOnLeaveToday = async () => {
   const today = new Date();
@@ -15,6 +27,7 @@ const getUsersOnLeaveToday = async () => {
     .select(['u.id AS userId', 'u.name AS userName'])
     .innerJoin('lr.user', 'u')
     .where('lr.status = :status', { status: LeaveStatus.APPROVED })
+    .andWhere('lr.deletedAt IS NULL')
     .andWhere(':today BETWEEN lr.startDate AND lr.endDate', { today })
     .groupBy('u.id')
     .addGroupBy('u.name')
@@ -43,6 +56,7 @@ const getTeamLeave = async ({ userIdArray, month, year, role }) => {
     ])
     .andWhere('MONTH(lr.start_date) = :month', { month })
     .andWhere('YEAR(lr.start_date) = :year', { year })
+    .andWhere('lr.deletedAt IS NULL')
     .andWhere('lr.status = :status', { status: LeaveStatus.APPROVED });
 
   if (role !== 'admin') {
@@ -55,7 +69,7 @@ const getTeamLeave = async ({ userIdArray, month, year, role }) => {
 // Get leave history by user ID
 const getLeaveHistoryByUserId = async (userId) => {
   const leaveRequests = await leaveRequestRepo.find({
-    where: { userId },
+    where: { userId ,deletedAt:null},
     relations: ['leaveType', 'user', 'user.manager'],
     order: { createdAt: 'DESC' }
   });
@@ -81,6 +95,7 @@ const getTeamRequestsHistoryByManagerId = async (managerId) => {
     .leftJoinAndSelect('leaveRequest.user', 'user')
     .leftJoinAndSelect('leaveRequest.leaveType', 'leaveType')
     .where('approval.approverId = :managerId', { managerId })
+    .andWhere('leaveRequest.deletedAt IS NULL')
     .andWhere('approval.status IN (:...statuses)', {
       statuses: [
         LeaveStatus.APPROVED,
@@ -91,12 +106,15 @@ const getTeamRequestsHistoryByManagerId = async (managerId) => {
     .orderBy('approval.actedAt', 'DESC')
     .getMany();
 
-  return approvals.map(appr => {
+  // SAFETY FILTER
+  const validApprovals = approvals.filter(appr => appr.leaveRequest !== null);
+
+  return validApprovals.map(appr => {
     return {
       approval_id: appr.id,
       leave_request_id: appr.leaveRequest.id,
-      employee_name: appr.leaveRequest.user.name,
-      leave_type: appr.leaveRequest.leaveType.name,
+      employee_name: appr.leaveRequest.user?.name || 'N/A',
+      leave_type: appr.leaveRequest.leaveType?.name || 'N/A',
       start_date: appr.leaveRequest.startDate,
       end_date: appr.leaveRequest.endDate,
       status: appr.status,
@@ -107,13 +125,20 @@ const getTeamRequestsHistoryByManagerId = async (managerId) => {
 };
 
 // Create a new leave request
-const createLeaveRequest = async ({ userId, managerId, leaveTypeId, startDate, endDate, isHalfDay, halfDayType, reason, status, finalApprovalLevel, totalDays }) => {
-  const leaveRequest = leaveRequestRepo.create({userId,managerId,leaveTypeId,startDate,endDate,isHalfDay,halfDayType,reason,status,finalApprovalLevel,totalDays});
+const createLeaveRequest = async ({
+  userId, managerId, leaveTypeId, startDate, endDate,
+  isHalfDay, halfDayType, reason, status, finalApprovalLevel, totalDays
+}) => {
+  const leaveRequest = leaveRequestRepo.create({
+    userId, managerId, leaveTypeId, startDate, endDate,
+    isHalfDay, halfDayType, reason, status, finalApprovalLevel, totalDays
+  });
   return leaveRequestRepo.save(leaveRequest);
 };
 
 // Get leave request by ID
-const getLeaveRequestById = async (id) => leaveRequestRepo.findOne({ where: { id }, relations: ['user', 'leaveType'] });
+const getLeaveRequestById = async (id) =>
+  leaveRequestRepo.findOne({ where: { id,deletedAt:null }, relations: ['user', 'leaveType'] });
 
 // Update leave request status
 const updateLeaveRequestStatus = async (id, status) => {
@@ -124,7 +149,7 @@ const updateLeaveRequestStatus = async (id, status) => {
   return leaveRequestRepo.save(leaveRequest);
 };
 
-//Get Incoming Requests
+// Get Incoming Requests
 const getIncomingRequests = async (userId) => {
   const approvals = await leaveApprovalRepo
     .createQueryBuilder('approval')
@@ -133,6 +158,7 @@ const getIncomingRequests = async (userId) => {
     .leftJoinAndSelect('leaveRequest.leaveType', 'leaveType')
     .where('approval.approverId = :userId', { userId })
     .andWhere('approval.status = :pending', { pending: LeaveStatus.PENDING })
+    .andWhere('leaveRequest.deletedAt IS NULL')
     .getMany();
 
   const validApprovals = [];
@@ -168,15 +194,17 @@ const getIncomingRequests = async (userId) => {
   }));
 };
 
-//Get Requests with Approvals
+// Get leave request and approvals
 const getLeaveRequestByIdWithApprovals = async (leaveRequestId) => {
   const request = await leaveRequestRepo.createQueryBuilder('lr')
     .where('lr.id = :id', { id: leaveRequestId })
+    .andWhere('lr.deletedAt IS NULL')
     .getOne();
 
   const approvals = await leaveApprovalRepo.createQueryBuilder('la')
     .leftJoinAndSelect('la.approver', 'approver')
     .where('la.leaveRequest = :id', { id: leaveRequestId })
+    .andWhere('la.deletedAt IS NULL')
     .getMany();
 
   return {
@@ -184,6 +212,8 @@ const getLeaveRequestByIdWithApprovals = async (leaveRequestId) => {
     approvals
   };
 };
+
+
 
 module.exports = {
   getUsersOnLeaveToday,
@@ -194,5 +224,7 @@ module.exports = {
   createLeaveRequest,
   getLeaveRequestById,
   updateLeaveRequestStatus,
-  getIncomingRequests
+  getIncomingRequests,
+  softDeleteLeaveRequest,
+  restoreLeaveRequest
 };
